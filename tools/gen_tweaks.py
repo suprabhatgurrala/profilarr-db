@@ -275,11 +275,11 @@ def custom_formats() -> SQL:
 
     # IMAX covers IMAX Enhanced too, so both print and score as plain IMAX.
     s.add("DELETE FROM custom_format_conditions WHERE custom_format_name = 'IMAX' AND name = 'NOT: IMAX Enhanced';")
-    # Only spelled-out services, IMAX, Hybrid and the audio formats print; everything else is off.
+    # Only spelled-out services, IMAX and the audio formats print; everything else is off.
     # Audio formats must be included too: {Custom Format:X} prints nothing otherwise. They are kept out
     # of the service list by the exclusion filter in the naming format. IMAX prints here as a technical
     # tag; the media stack's import hook strips it from Radarr's edition.
-    printed = [spelled for spelled, _ in SERVICES.values()] + ["IMAX", "Hybrid"] + [n for n, _ in AUDIO]
+    printed = [spelled for spelled, _ in SERVICES.values()] + ["IMAX"] + [n for n, _ in AUDIO]
     s.add("UPDATE custom_formats SET include_in_rename = 0;")
     s.add(f"UPDATE custom_formats SET include_in_rename = 1 WHERE name IN ({', '.join(q(n) for n in printed)});")
     return s
@@ -381,7 +381,7 @@ def ladder_profile(s: SQL, name: str, desc: str, rungs: list, top: str, min_scor
 
 def profiles() -> SQL:
     s = SQL()
-    naming = {spelled: 0 for spelled, _ in SERVICES.values()} | {n: 0 for n, _ in AUDIO} | {"Hybrid": 0, "IMAX": 0}
+    naming = {spelled: 0 for spelled, _ in SERVICES.values()} | {n: 0 for n, _ in AUDIO} | {"IMAX": 0}
 
     scores = dict(LADDER_SCORES)
     for lst, tiers in GIST.items():
@@ -418,6 +418,8 @@ def profiles() -> SQL:
 
 def media() -> SQL:
     s = SQL()
+    # rename = 0: media_utils' library_rename script owns file and folder names (decided 2026-11-14) and renames each
+    # import from a webhook. The formats below only name a file between import and that rename, and name new folders.
     # Audio prints from the audio custom formats in our spelling (DD+, LPCM, ...). They only match release names
     # and filenames, so library files imported from disk had their media-info codec written into the filename
     # once (2026-11-14) so the formats match them too.
@@ -425,11 +427,11 @@ def media() -> SQL:
         "{ Custom Format:" + n + "}" for n, _ in AUDIO) + "{ MediaInfo AudioChannels}{-Release Group}"
     movie_file = "{Movie CleanTitle} ({Release Year}) {imdb-{ImdbId}} {edition-{Edition Tags}} " + details
     s.add("INSERT INTO radarr_naming (name, rename, movie_format, movie_folder_format, replace_illegal_characters, colon_replacement_format) "
-          f"VALUES ('Ladder', 1, {q(movie_file)}, {q('{Movie CleanTitle} ({Release Year}) {imdb-{ImdbId}}')}, 1, 'smart');")
+          f"VALUES ('Ladder', 0, {q(movie_file)}, {q('{Movie CleanTitle} ({Release Year}) {imdb-{ImdbId}}')}, 1, 'smart');")
     series = "{Series CleanTitleWithoutYear} ({Series Year})"
     s.add("INSERT INTO sonarr_naming (name, rename, standard_episode_format, daily_episode_format, anime_episode_format, "
           "series_folder_format, season_folder_format, replace_illegal_characters, colon_replacement_format, multi_episode_style) VALUES ("
-          f"'Ladder', 1, {q(series + ' - S{season:00}E{episode:00} - {Episode CleanTitle} - ' + details)}, "
+          f"'Ladder', 0, {q(series + ' - S{season:00}E{episode:00} - {Episode CleanTitle} - ' + details)}, "
           f"{q(series + ' - {Air-Date} - {Episode CleanTitle} - ' + details)}, "
           f"{q(series + ' - S01E{absolute:0000} - {Episode CleanTitle} - ' + details)}, "
           f"{q(series + ' {tvdb-{TvdbId}}')}, {q('Season {season:00}')}, 1, 4, 0);")

@@ -72,7 +72,6 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Ladder', 'DTS', 'all', 0);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Ladder', 'AAC', 'all', 0);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Ladder', 'Opus', 'all', 0);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Ladder', 'Hybrid', 'all', 0);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Ladder', 'IMAX', 'all', 100);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Ladder', 'Special Edition', 'all', -5000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Ladder', 'Repack/Proper', 'all', 100);
@@ -261,7 +260,6 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'DTS', 'all', 0);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'AAC', 'all', 0);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Opus', 'all', 0);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Hybrid', 'all', 0);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'IMAX', 'all', 0);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Repack/Proper', 'all', 100);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Repack2', 'all', 200);
