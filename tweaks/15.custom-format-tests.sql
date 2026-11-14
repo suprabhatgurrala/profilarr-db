@@ -14,9 +14,15 @@ INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, 
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Stan', 'Some.Show.S01E01.1080p.STAN.WEB-DL.AAC2.0.H.264-GRP', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('BBC iPlayer', 'Some.Show.S01E01.1080p.iP.WEB-DL.AAC2.0.H.264-GRP', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Disney+', 'Idiocracy (2006) {imdb-tt0387808} Disney+ WEBDL-1080p DD+ 5.1-FLUX', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Disney+', 'Idiocracy (2006) {imdb-tt0387808} Disney+ 1080p WEB-DL EAC3 5.1-FLUX', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Amazon', 'Top Gear (2002) - S25E02 - Episode 2 - Amazon 1080p WEB-DL EAC3 2.0', 'series', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Netflix', 'Some Show (2020) - S01E01 - Pilot - Netflix 2160p WEB-DL DV HDR10 EAC3 Atmos 5.1-GRP', 'series', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Max', 'Mad Max (1979) {imdb-tt0079501} 1080p Blu-ray Remux DTS-HD MA 2.0', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Apple TV+', 'Some.Show.S01E01.2160p.ATVP.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Paramount+', 'Some.Show.S01E01.1080p.PMTP.WEB-DL.DDP5.1.H.264-GRP', 'series', 1, NULL);
-INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Bravia Core', 'Some.Film.2010.2160p.BCORE.WEB-DL.DTS-HD.MA.5.1.HDR.H.265-GRP', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Sony Pictures Core', 'Some.Film.2010.2160p.BCORE.WEB-DL.DTS-HD.MA.5.1.HDR.H.265-GRP', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Sony Pictures Core', 'Call Me by Your Name (2017) {imdb-tt5726616} 4K HDR10 Sony Pictures Core WEB-DL DTS-HD MA', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Sony Pictures Core', 'Men in Black (1997) {imdb-tt0119654} Sony Pictures Core 2160p WEB-DL HDR10 DTS-HD MA 7.1', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('IMAX', 'Dune.2021.IMAX.Enhanced.2160p.BCORE.WEB-DL.DTS-X.7.1.HDR.H.265-GRP', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('IMAX', 'Dune (2021) {imdb-tt1160419} Disney+ IMAX WEBDL-2160p HDR10 DD+ Atmos 5.1-GRP', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Lossy Remux', 'Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT', 'movie', 0, NULL);

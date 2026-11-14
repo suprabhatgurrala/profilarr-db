@@ -30,7 +30,8 @@ INCREMENT = 100
 # Streaming services: (tag, spelled-out name used in file names, title regex)
 # The regex must match both scene tags and our renamed files ("Disney+ WEBDL-1080p").
 # Each is followed by a WEB source, which keeps titles like "Mad Max" or "Stan & Ollie" out.
-WEB_AFTER = r"(?=[ ._-]+web[ ._-]?(dl|rip)?\b)"
+# Ladder names put the quality title between them ("Amazon 2160p WEB-DL"), so a resolution may sit in between.
+WEB_AFTER = r"(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)"
 SERVICES = {
     "MA": ("Movies Anywhere", r"(?<!dts[ ._-]?hd[ ._-]?)\b(ma|movies[ ._-]anywhere)\b"),
     "MS": ("Microsoft Store", r"\b(msft|ms|microsoft[ ._-]store)\b"),
@@ -48,7 +49,8 @@ SERVICES = {
     "DSNP": ("Disney+", r"\b(dsnp|dsny|strp|disney[ ._-]?(\+|plus)|star[ ._-]?(\+|plus))(?=[ ._-])"),
     "HMAX": ("HBO Max", r"\b(hmax|hbom|hbo[ ._-]?max)\b"),
     "MAX": ("Max", r"(?<!hbo[ ._-])\b(max)\b"),
-    "BCORE": ("Bravia Core", r"\b(bcore|bravia[ ._-]core|core)\b"),
+    # Sony renamed Bravia Core to Sony Pictures Core in 2023; scene tags still say BCORE.
+    "BCORE": ("Sony Pictures Core", r"\b(bcore|bravia[ ._-]core|sony[ ._-]pictures[ ._-]core|core)\b"),
     "CR": ("Crunchyroll", r"\b(cr|crunchyroll)\b"),
     "KNPY": ("Kanopy", r"\b(knpy|kanopy)\b"),
     "SKST": ("SkyShowtime", r"\b(skst|skyshowtime)\b"),
@@ -63,7 +65,7 @@ SERVICES = {
 # vevv's WEB source cheatsheet (gist 1d7037bb556c17e977b26b9f8f175853), best first within a tier.
 # Tier scores: the gist's "good" tier +2000, "mixed" +1000, "OK"/unlisted 0, "bad" -1000.
 GOOD, MIXED, OK, BAD = 2000, 1000, 0, -1000
-# Bravia Core: remux-like bitrates, so it beats every other WEB-DL and always triggers an upgrade.
+# Sony Pictures Core (BCORE): remux-like bitrates, so it beats every other WEB-DL and always triggers an upgrade.
 # A 2160p remux still replaces it; to keep a BCORE file, unmonitor the title in Radarr/Sonarr.
 NEAR_REMUX = 4000
 GIST = {
@@ -300,9 +302,15 @@ def tests() -> SQL:
         ("Stan", "Some.Show.S01E01.1080p.STAN.WEB-DL.AAC2.0.H.264-GRP", 1, t),
         ("BBC iPlayer", "Some.Show.S01E01.1080p.iP.WEB-DL.AAC2.0.H.264-GRP", 1, t),
         ("Disney+", "Idiocracy (2006) {imdb-tt0387808} Disney+ WEBDL-1080p DD+ 5.1-FLUX", 1, m),
+        ("Disney+", "Idiocracy (2006) {imdb-tt0387808} Disney+ 1080p WEB-DL EAC3 5.1-FLUX", 1, m),
+        ("Amazon", "Top Gear (2002) - S25E02 - Episode 2 - Amazon 1080p WEB-DL EAC3 2.0", 1, t),
+        ("Netflix", "Some Show (2020) - S01E01 - Pilot - Netflix 2160p WEB-DL DV HDR10 EAC3 Atmos 5.1-GRP", 1, t),
+        ("Max", "Mad Max (1979) {imdb-tt0079501} 1080p Blu-ray Remux DTS-HD MA 2.0", 0, m),
         ("Apple TV+", "Some.Show.S01E01.2160p.ATVP.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 1, t),
         ("Paramount+", "Some.Show.S01E01.1080p.PMTP.WEB-DL.DDP5.1.H.264-GRP", 1, t),
-        ("Bravia Core", "Some.Film.2010.2160p.BCORE.WEB-DL.DTS-HD.MA.5.1.HDR.H.265-GRP", 1, m),
+        ("Sony Pictures Core", "Some.Film.2010.2160p.BCORE.WEB-DL.DTS-HD.MA.5.1.HDR.H.265-GRP", 1, m),
+        ("Sony Pictures Core", "Call Me by Your Name (2017) {imdb-tt5726616} 4K HDR10 Sony Pictures Core WEB-DL DTS-HD MA", 1, m),
+        ("Sony Pictures Core", "Men in Black (1997) {imdb-tt0119654} Sony Pictures Core 2160p WEB-DL HDR10 DTS-HD MA 7.1", 1, m),
         ("IMAX", "Dune.2021.IMAX.Enhanced.2160p.BCORE.WEB-DL.DTS-X.7.1.HDR.H.265-GRP", 1, m),
         ("IMAX", "Dune (2021) {imdb-tt1160419} Disney+ IMAX WEBDL-2160p HDR10 DD+ Atmos 5.1-GRP", 1, m),
         ("Lossy Remux", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 0, m),
@@ -410,6 +418,9 @@ def profiles() -> SQL:
 
 def media() -> SQL:
     s = SQL()
+    # Audio prints from the audio custom formats in our spelling (DD+, LPCM, ...). They only match release names
+    # and filenames, so library files imported from disk had their media-info codec written into the filename
+    # once (2026-11-14) so the formats match them too.
     details = "{Custom Formats:-" + ",".join(n for n, _ in AUDIO) + "} {Quality Full}{ MediaInfo VideoDynamicRangeType}" + "".join(
         "{ Custom Format:" + n + "}" for n, _ in AUDIO) + "{ MediaInfo AudioChannels}{-Release Group}"
     movie_file = "{Movie CleanTitle} ({Release Year}) {imdb-{ImdbId}} {edition-{Edition Tags}} " + details
@@ -420,8 +431,8 @@ def media() -> SQL:
           "series_folder_format, season_folder_format, replace_illegal_characters, colon_replacement_format, multi_episode_style) VALUES ("
           f"'Ladder', 1, {q(series + ' - S{season:00}E{episode:00} - {Episode CleanTitle} - ' + details)}, "
           f"{q(series + ' - {Air-Date} - {Episode CleanTitle} - ' + details)}, "
-          f"{q(series + ' - S{season:00}E{absolute:0000} - {Episode CleanTitle} - ' + details)}, "
-          f"{q(series + ' {tvdb-{TvdbId}}')}, 'Season {{season:00}}', 1, 4, 0);".replace("{{", "{").replace("}}", "}"))
+          f"{q(series + ' - S01E{absolute:0000} - {Episode CleanTitle} - ' + details)}, "
+          f"{q(series + ' {tvdb-{TvdbId}}')}, {q('Season {season:00}')}, 1, 4, 0);")
     for app in ("radarr", "sonarr"):
         s.add(f"INSERT INTO {app}_media_settings (name, propers_repacks, enable_media_info) VALUES ('Ladder', 'doNotPrefer', 1);")
         pref = 1999 if app == "radarr" else 995
