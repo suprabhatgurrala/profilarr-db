@@ -111,7 +111,7 @@ BANS_COMMON = ["BR-DISK", "BR-DISK (BTN)", "3D", "Upscaled", "LQ", "LQ (Release 
 LADDER_SCORES = {
     "Special Edition": -5000,
     "Repack/Proper": 100, "Repack2": 200, "Repack3": 300,
-    "IMAX": 100, "IMAX Enhanced": 100,
+    "IMAX": 100,  # also matches IMAX Enhanced (see custom_formats), which is not scored separately
     "Season Pack": 50,
     "Criterion Collection": 4, "Masters of Cinema": 4, "Vinegar Syndrome": 4, "Remaster": 4, "4K Remaster": 4,
     "WEB Tier 01": 3, "WEB Tier 02": 2, "WEB Tier 03": 1,
@@ -271,8 +271,13 @@ def custom_formats() -> SQL:
     for r in ("2160p", "1080p", "720p"):
         s.cond("SD WEB-DL", f"Not {r}", "resolution", r, negate=1, required=1)
 
-    # Only spelled-out services, IMAX and Hybrid print via {Custom Formats}; everything else is off.
-    printed = [spelled for spelled, _ in SERVICES.values()] + ["IMAX", "IMAX Enhanced", "Hybrid"]
+    # IMAX covers IMAX Enhanced too, so both print and score as plain IMAX.
+    s.add("DELETE FROM custom_format_conditions WHERE custom_format_name = 'IMAX' AND name = 'NOT: IMAX Enhanced';")
+    # Only spelled-out services, IMAX, Hybrid and the audio formats print; everything else is off.
+    # Audio formats must be included too: {Custom Format:X} prints nothing otherwise. They are kept out
+    # of the service list by the exclusion filter in the naming format. IMAX prints here as a technical
+    # tag; the media stack's import hook strips it from Radarr's edition.
+    printed = [spelled for spelled, _ in SERVICES.values()] + ["IMAX", "Hybrid"] + [n for n, _ in AUDIO]
     s.add("UPDATE custom_formats SET include_in_rename = 0;")
     s.add(f"UPDATE custom_formats SET include_in_rename = 1 WHERE name IN ({', '.join(q(n) for n in printed)});")
     return s
@@ -298,6 +303,8 @@ def tests() -> SQL:
         ("Apple TV+", "Some.Show.S01E01.2160p.ATVP.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 1, t),
         ("Paramount+", "Some.Show.S01E01.1080p.PMTP.WEB-DL.DDP5.1.H.264-GRP", 1, t),
         ("Bravia Core", "Some.Film.2010.2160p.BCORE.WEB-DL.DTS-HD.MA.5.1.HDR.H.265-GRP", 1, m),
+        ("IMAX", "Dune.2021.IMAX.Enhanced.2160p.BCORE.WEB-DL.DTS-X.7.1.HDR.H.265-GRP", 1, m),
+        ("IMAX", "Dune (2021) {imdb-tt1160419} Disney+ IMAX WEBDL-2160p HDR10 DD+ Atmos 5.1-GRP", 1, m),
         ("Lossy Remux", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 0, m),
         ("Lossy Remux", "Heat.1995.1080p.BluRay.REMUX.AVC.DD.5.1-GRP", 1, m),
         ("Lossy Remux", "Heat.1995.2160p.UHD.BluRay.REMUX.HDR.HEVC.Atmos-GRP", 0, m),
@@ -366,7 +373,7 @@ def ladder_profile(s: SQL, name: str, desc: str, rungs: list, top: str, min_scor
 
 def profiles() -> SQL:
     s = SQL()
-    naming = {spelled: 0 for spelled, _ in SERVICES.values()} | {n: 0 for n, _ in AUDIO} | {"Hybrid": 0}
+    naming = {spelled: 0 for spelled, _ in SERVICES.values()} | {n: 0 for n, _ in AUDIO} | {"Hybrid": 0, "IMAX": 0}
 
     scores = dict(LADDER_SCORES)
     for lst, tiers in GIST.items():
@@ -381,7 +388,7 @@ def profiles() -> SQL:
         "720p WEB-DL > SD (DVD Remux > SD WEB-DL > DVD encode). WEB-DLs rank by vevv's source gist for their "
         "own HDR type, then HDR type, then group. Remuxes need lossless audio and rank CiNEPHiLES > TRaSH tiers.",
         ["Remux-2160p", "WEBDL-2160p", "Remux-1080p", "WEBDL-1080p", "WEBDL-720p", ("SD", ["DVD", "WEBDL-480p"])],
-        top="Remux-2160p", min_score=MIN_SCORE, until_score=MIN_SCORE, scores=scores | naming,
+        top="Remux-2160p", min_score=MIN_SCORE, until_score=MIN_SCORE, scores=naming | scores,
         bans=BANS_COMMON + ["DV (w/o HDR fallback)"])
 
     p5 = {k: v for k, v in LADDER_SCORES.items() if k.startswith(("Repack", "WEB Tier", "Anime Web", "Season Pack"))}
@@ -393,14 +400,14 @@ def profiles() -> SQL:
         s, "DV Profile 5",
         "Profile 5 Dolby Vision WEB-DLs only, for the DV libraries (RadarrDV, SonarrDV): 2160p > 1080p, "
         "both ranked by the gist's UHD DV tiers.",
-        ["WEBDL-2160p", "WEBDL-1080p"], top="WEBDL-2160p", min_score=40000, until_score=999999, scores=p5 | naming,
+        ["WEBDL-2160p", "WEBDL-1080p"], top="WEBDL-2160p", min_score=40000, until_score=999999, scores=naming | p5,
         bans=[b for b in BANS_COMMON if b != "Lossy Remux"])
     return s
 
 
 def media() -> SQL:
     s = SQL()
-    details = "{Custom Formats} {Quality Full}{ MediaInfo VideoDynamicRangeType}" + "".join(
+    details = "{Custom Formats:-" + ",".join(n for n, _ in AUDIO) + "} {Quality Full}{ MediaInfo VideoDynamicRangeType}" + "".join(
         "{ Custom Format:" + n + "}" for n, _ in AUDIO) + "{ MediaInfo AudioChannels}{-Release Group}"
     movie_file = "{Movie CleanTitle} ({Release Year}) {imdb-{ImdbId}} {edition-{Edition Tags}} " + details
     s.add("INSERT INTO radarr_naming (name, rename, movie_format, movie_folder_format, replace_illegal_characters, colon_replacement_format) "
