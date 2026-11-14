@@ -384,10 +384,13 @@ def profiles() -> SQL:
                 scores[f"Gist {lst}: {tag}"] = tier_score + position_bonus(i, len(tags))
     ladder_profile(
         s, "Ladder",
-        "One ladder for movies and TV: 2160p Remux (final) > 2160p WEB-DL > 1080p Remux > 1080p WEB-DL > "
-        "720p WEB-DL > SD (DVD Remux > SD WEB-DL > DVD encode). WEB-DLs rank by vevv's source gist for their "
-        "own HDR type, then HDR type, then group. Remuxes need lossless audio and rank CiNEPHiLES > TRaSH tiers.",
-        ["Remux-2160p", "WEBDL-2160p", "Remux-1080p", "WEBDL-1080p", "WEBDL-720p", ("SD", ["DVD", "WEBDL-480p"])],
+        "One ladder for movies and TV: 2160p Remux (final) > 2160p WEB-DL > 1080p Remux > 1080p WEB-DL. "
+        "720p and SD are never grabbed automatically; grab them by hand from Interactive Search. WEB-DLs rank by "
+        "vevv's source gist for their own HDR type, then HDR type, then group. Remuxes need lossless audio and "
+        "rank CiNEPHiLES > TRaSH tiers.",
+        # 1080p WEB-DL is the lowest automatic grab. The 720p/SD scores (SD WEB-DL, DVD Remux, gist SD list)
+        # stay defined for manual grabs and in case these rungs come back.
+        ["Remux-2160p", "WEBDL-2160p", "Remux-1080p", "WEBDL-1080p"],
         top="Remux-2160p", min_score=MIN_SCORE, until_score=MIN_SCORE, scores=naming | scores,
         bans=BANS_COMMON + ["DV (w/o HDR fallback)"])
 
