@@ -96,21 +96,12 @@ RX = {
     "sg-cinephiles": r"^(CiNEPHiLES)$",
 }
 
-# Mutually exclusive audio formats, printed in file names (consumer names).
-AUDIO_NAMES = [
-    ("TrueHD Atmos", [r"\b(TrueHD)\b", r"\b(Atmos)\b"], []),
-    ("TrueHD", [r"\b(TrueHD)\b"], [r"\b(Atmos)\b"]),
-    ("DTS:X", [r"\bDTS[ ._:-]?X(?!\d)"], []),
-    ("DTS-HD MA", [r"\bDTS[ ._-]?HD[ ._-]?MA\b"], [r"\bDTS[ ._:-]?X(?!\d)"]),
-    ("LPCM", [r"\b(L?PCM)\b"], []),
-    ("FLAC", [r"\b(FLAC)\b"], []),
-    ("DD+ Atmos", [r"\b(DDP|DD\+|E-?AC-?3)", r"\b(Atmos)\b"], [r"\b(TrueHD)\b"]),
-    ("DD+", [r"\b(DDP|DD\+|E-?AC-?3)"], [r"\b(Atmos)\b"]),
-    ("DD", [r"\b(DD|AC-?3)(?![+P])\d?"], [r"\b(DDP|DD\+|E-?AC-?3|TrueHD)"]),
-    ("DTS", [r"\bDTS\b"], [r"\bDTS[ ._-]?(HD|X|ES|HRA)\b|\bDTS:X"]),
-    ("AAC", [r"\b(AAC)\b"], []),
-    ("Opus", [r"\b(OPUS)\b"], []),
-]
+# Audio printed in file names, one {Custom Format:X} token each. TRaSH's audio formats are mutually
+# exclusive; where we want a different spelling we add a copy of the TRaSH format under our name
+# (Radarr's token can't contain ':' or '.', and TRaSH prints ATMOS in caps). (name, TRaSH source or None)
+AUDIO = [("TrueHD Atmos", "TrueHD ATMOS"), ("TrueHD", None), ("DTS-X", "DTS X"), ("DTS-HD MA", None),
+         ("LPCM", "PCM"), ("FLAC", None), ("DD+ Atmos", "DD+ ATMOS"), ("DD+", None), ("DD", None), ("DTS", None),
+         ("AAC", None), ("Opus", None)]
 
 BANS_COMMON = ["BR-DISK", "BR-DISK (BTN)", "3D", "Upscaled", "LQ", "LQ (Release Title)", "Generated Dynamic HDR",
                "Bad Dual Groups", "Line/Mic Dubbed", "AV1", "Sing-Along Versions", "Black and White Editions",
@@ -203,14 +194,15 @@ def custom_formats() -> SQL:
         s.cond(spelled, "WEBDL", "source", "web_dl")
         s.cond(spelled, "WEBRIP", "source", "webrip")
 
-    # Naming-only audio formats with consumer names, mutually exclusive.
-    for name, must, mustnot in AUDIO_NAMES:
-        cf = f"Audio: {name}"
-        s.cf(cf, f"Naming only (score 0): prints the audio codec as '{name}'.", rename=0)
-        for i, p in enumerate(must):
-            s.title(cf, f"has {i}", s.regex(f"sg-audio-{name}-has{i}", p))
-        for i, p in enumerate(mustnot):
-            s.title(cf, f"not {i}", s.regex(f"sg-audio-{name}-not{i}", p), negate=1)
+    # Naming-only audio formats: copies of TRaSH audio formats under our spelling.
+    for name, src in AUDIO:
+        if src is None:
+            continue
+        s.cf(name, f"Naming only (score 0): copy of TRaSH's '{src}' that prints as '{name}'.")
+        s.add("INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) "
+              f"SELECT {q(name)}, name, type, arr_type, negate, required FROM custom_format_conditions WHERE custom_format_name = {q(src)};")
+        s.add("INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) "
+              f"SELECT {q(name)}, condition_name, regular_expression_name FROM condition_patterns WHERE custom_format_name = {q(src)};")
 
     # HDR on 2160p WEB-DL.
     s.cf("HDR (2160p WEB)", "Any HDR layer on a 2160p WEB-DL, so every HDR release ranks above SDR.")
@@ -324,11 +316,16 @@ def tests() -> SQL:
         ("Gist HD: DSNP", "Some.Film.2010.1080p.DSNP.WEB-DL.DDP5.1.H.264-GRP", 1, m),
         ("Gist P5: NF", "Fallout.S02E01.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.H.265-GRP", 1, t),
         ("Gist P5: NF", "Fallout.S02E01.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 0, t),
-        ("Audio: DD+ Atmos", "Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 1, m),
-        ("Audio: DD+", "Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 0, m),
-        ("Audio: DTS-HD MA", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 1, m),
-        ("Audio: DTS:X", "Heat.1995.2160p.BluRay.REMUX.HEVC.DTS-HD.MA.DTS-X.7.1-GRP", 1, m),
-        ("Audio: DTS-HD MA", "Heat.1995.2160p.BluRay.REMUX.HEVC.DTS-HD.MA.DTS-X.7.1-GRP", 0, m),
+        ("DD+ Atmos", "Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 1, m),
+        ("DD+ Atmos", "Some Film (2010) {imdb-tt1} Netflix WEBDL-2160p DV HDR10 DD+ Atmos 5.1-GRP", 1, m),
+        ("DD+", "Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 0, m),
+        ("TrueHD Atmos", "Heat.1995.2160p.BluRay.REMUX.HEVC.TrueHD.Atmos.7.1-GRP", 1, m),
+        ("TrueHD", "Heat.1995.2160p.BluRay.REMUX.HEVC.TrueHD.Atmos.7.1-GRP", 0, m),
+        ("DTS-HD MA", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 1, m),
+        ("DTS-X", "Heat.1995.2160p.BluRay.REMUX.HEVC.DTS-X.7.1-GRP", 1, m),
+        ("DTS-X", "Heat (1995) {imdb-tt0113277} Remux-2160p HDR10 DTS-X 7.1-GRP", 1, m),
+        ("DTS-HD MA", "Heat.1995.2160p.BluRay.REMUX.HEVC.DTS-X.7.1-GRP", 0, m),
+        ("LPCM", "Heat.1995.1080p.BluRay.REMUX.AVC.LPCM.2.0-GRP", 1, m),
     ]:
         s.test(cf, title, should, kind)
     return s
@@ -359,11 +356,17 @@ def ladder_profile(s: SQL, name: str, desc: str, rungs: list, top: str, min_scor
         scores[cf] = BAN
     for cf, sc in scores.items():
         s.add(f"INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ({q(name)}, {q(cf)}, 'all', {sc});")
+    # Formats whose conditions all belong to one app (e.g. Season Pack) are only scored there;
+    # the other app rejects a format with no conditions.
+    s.add("UPDATE quality_profile_custom_formats SET arr_type = (SELECT min(c.arr_type) FROM custom_format_conditions c "
+          "WHERE c.custom_format_name = quality_profile_custom_formats.custom_format_name) "
+          f"WHERE quality_profile_name = {q(name)} AND custom_format_name IN (SELECT custom_format_name FROM custom_format_conditions "
+          "GROUP BY custom_format_name HAVING count(DISTINCT arr_type) = 1 AND min(arr_type) IN ('radarr', 'sonarr'));")
 
 
 def profiles() -> SQL:
     s = SQL()
-    naming = {spelled: 0 for spelled, _ in SERVICES.values()} | {f"Audio: {n}": 0 for n, _, _ in AUDIO_NAMES} | {"Hybrid": 0}
+    naming = {spelled: 0 for spelled, _ in SERVICES.values()} | {n: 0 for n, _ in AUDIO} | {"Hybrid": 0}
 
     scores = dict(LADDER_SCORES)
     for lst, tiers in GIST.items():
@@ -398,7 +401,7 @@ def profiles() -> SQL:
 def media() -> SQL:
     s = SQL()
     details = "{Custom Formats} {Quality Full}{ MediaInfo VideoDynamicRangeType}" + "".join(
-        "{ Custom Format:Audio: " + n + "}" for n, _, _ in AUDIO_NAMES) + "{ MediaInfo AudioChannels}{-Release Group}"
+        "{ Custom Format:" + n + "}" for n, _ in AUDIO) + "{ MediaInfo AudioChannels}{-Release Group}"
     movie_file = "{Movie CleanTitle} ({Release Year}) {imdb-{ImdbId}} {edition-{Edition Tags}} " + details
     s.add("INSERT INTO radarr_naming (name, rename, movie_format, movie_folder_format, replace_illegal_characters, colon_replacement_format) "
           f"VALUES ('Ladder', 1, {q(movie_file)}, {q('{Movie CleanTitle} ({Release Year}) {imdb-{ImdbId}}')}, 1, 'smart');")

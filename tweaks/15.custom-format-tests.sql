@@ -35,8 +35,13 @@ INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, 
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Gist HD: DSNP', 'Some.Film.2010.1080p.DSNP.WEB-DL.DDP5.1.H.264-GRP', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Gist P5: NF', 'Fallout.S02E01.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.H.265-GRP', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Gist P5: NF', 'Fallout.S02E01.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP', 'series', 0, NULL);
-INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Audio: DD+ Atmos', 'Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP', 'movie', 1, NULL);
-INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Audio: DD+', 'Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP', 'movie', 0, NULL);
-INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Audio: DTS-HD MA', 'Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT', 'movie', 1, NULL);
-INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Audio: DTS:X', 'Heat.1995.2160p.BluRay.REMUX.HEVC.DTS-HD.MA.DTS-X.7.1-GRP', 'movie', 1, NULL);
-INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Audio: DTS-HD MA', 'Heat.1995.2160p.BluRay.REMUX.HEVC.DTS-HD.MA.DTS-X.7.1-GRP', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('DD+ Atmos', 'Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('DD+ Atmos', 'Some Film (2010) {imdb-tt1} Netflix WEBDL-2160p DV HDR10 DD+ Atmos 5.1-GRP', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('DD+', 'Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('TrueHD Atmos', 'Heat.1995.2160p.BluRay.REMUX.HEVC.TrueHD.Atmos.7.1-GRP', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('TrueHD', 'Heat.1995.2160p.BluRay.REMUX.HEVC.TrueHD.Atmos.7.1-GRP', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('DTS-HD MA', 'Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('DTS-X', 'Heat.1995.2160p.BluRay.REMUX.HEVC.DTS-X.7.1-GRP', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('DTS-X', 'Heat (1995) {imdb-tt0113277} Remux-2160p HDR10 DTS-X 7.1-GRP', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('DTS-HD MA', 'Heat.1995.2160p.BluRay.REMUX.HEVC.DTS-X.7.1-GRP', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('LPCM', 'Heat.1995.1080p.BluRay.REMUX.AVC.LPCM.2.0-GRP', 'movie', 1, NULL);
