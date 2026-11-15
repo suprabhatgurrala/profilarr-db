@@ -4,11 +4,14 @@
 Edit the tables below, run `python3 tools/gen_tweaks.py`, then `python3 tools/build_db.py`.
 The generated SQL is committed; this script is the source of truth for it.
 
-Scoring scale (scores only compare releases of the same quality; quality order decides first):
+Scoring scale. Quality order decides first; scores rank releases of the same quality. The score still reads
+as overall quality, highest first, so the apps' release lists and the delay bypass can use it:
 
     BAN            -999999  never grabbed (minimum score is -100000)
+    bypass         +100000  skips the delay profile: Top Remux (movies), 2160p Tier 1 Group (TV)
+    quality band   10000s   Remux-2160p 40000 > WEB-DL 2160p 30000 > Remux-1080p 20000 > WEB-DL 1080p 10000
     edition        -5000    Special Edition: theatrical cut is the default
-    HDR present    +10000   2160p WEB-DL only: any HDR beats any SDR
+    HDR present    +5000    2160p WEB-DL only: any HDR beats any SDR
     source tier    1000s    gist tier: SDR or HDR list, DV+HDR10 counts as HDR (T1 +2000 … bad -1000);
                             the UHD DV list only ranks Profile 5 in the DV profile
     HDR type       +100s    DV+HDR10 +200 > HDR10+ +100 > HDR10 0, within a tier
@@ -122,9 +125,14 @@ LADDER_SCORES = {
     "CiNEPHiLES": 400, "Remux Tier 01": 300, "Remux Tier 02": 200, "Remux Tier 03": 100,
     "Anime BD Tier 01": 300, "Anime BD Tier 02": 300, "Anime BD Tier 03": 200, "Anime BD Tier 04": 200,
     "Anime BD Tier 05": 100, "Anime BD Tier 06": 100, "Anime BD Tier 07": 100, "Anime BD Tier 08": 100,
-    "HDR (2160p WEB)": 10000, "HDR: DV+HDR10": 200, "HDR: HDR10+": 100,
+    "HDR (2160p WEB)": 5000, "HDR: DV+HDR10": 200, "HDR: HDR10+": 100,
     "DVD Remux": 6000, "SD WEB-DL": 3000,
+    "Band: Remux-2160p": 40000, "Band: WEB-DL 2160p": 30000, "Band: Remux-1080p": 20000, "Band: WEB-DL 1080p": 10000,
 }
+# Scores at or above this skip the delay profiles (see media()).
+BYPASS = 100000
+BYPASS_SCORES = {"Top Remux": BYPASS, "Tier 1 Group": BYPASS}
+MOVIE_DELAY, TV_DELAY = 48 * 60, 60  # minutes
 
 ALL_QUALITIES = ["Remux-2160p", "WEBDL-2160p", "Remux-1080p", "WEBDL-1080p", "WEBDL-720p", "DVD", "WEBDL-480p",
                  "Raw-HD", "BR-DISK", "Bluray-2160p", "HDTV-2160p", "WEBRip-2160p", "Bluray-1080p", "HDTV-1080p",
@@ -273,6 +281,41 @@ def custom_formats() -> SQL:
     for r in ("2160p", "1080p", "720p"):
         s.cond("SD WEB-DL", f"Not {r}", "resolution", r, negate=1, required=1)
 
+    # Quality bands: one format per enabled rung, so the score orders releases across qualities too.
+    for res in ("2160p", "1080p"):
+        cf = f"Band: Remux-{res}"
+        s.cf(cf, f"Quality band for {res} remuxes (scoring only).")
+        s.cond(cf, "Remux", "quality_modifier", "remux", required=1, arr="radarr")
+        s.cond(cf, "Remux Source", "source", "bluray_raw", required=1, arr="sonarr")
+        s.cond(cf, res, "resolution", res, required=1)
+        cf = f"Band: WEB-DL {res}"
+        s.cf(cf, f"Quality band for {res} WEB-DLs (scoring only).")
+        web_source(s, cf)
+        s.cond(cf, res, "resolution", res, required=1)
+
+    # Delay bypass formats. Their groups are copied from TRaSH's tier formats, so they follow upstream.
+    def copy_groups(cf, src, arr):
+        s.add("INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) "
+              f"SELECT {q(cf)}, name, type, {q(arr)}, 0, 0 FROM custom_format_conditions WHERE custom_format_name = {q(src)} "
+              f"AND type = 'release_group' AND arr_type IN ('all', {q(arr)}) AND name NOT IN "
+              f"(SELECT name FROM custom_format_conditions WHERE custom_format_name = {q(cf)});")
+        s.add("INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) "
+              f"SELECT {q(cf)}, p.condition_name, p.regular_expression_name FROM condition_patterns p "
+              f"JOIN custom_format_conditions c ON c.custom_format_name = p.custom_format_name AND c.name = p.condition_name "
+              f"WHERE p.custom_format_name = {q(src)} AND c.type = 'release_group' AND c.arr_type IN ('all', {q(arr)}) "
+              f"AND p.condition_name NOT IN (SELECT condition_name FROM condition_patterns WHERE custom_format_name = {q(cf)});")
+    s.cf("Top Remux", "Movies: 2160p remux from a Remux Tier 01 group with Dolby Vision and HDR10+. Skips the 48-hour delay.")
+    s.cond("Top Remux", "Remux", "quality_modifier", "remux", required=1, arr="radarr")
+    s.cond("Top Remux", "2160p", "resolution", "2160p", required=1, arr="radarr")
+    s.cond("Top Remux", "DV", "release_title", "sg-dv", required=1, arr="radarr")
+    s.cond("Top Remux", "HDR10+", "release_title", "sg-hdr10plus", required=1, arr="radarr")
+    copy_groups("Top Remux", "Remux Tier 01", "radarr")
+    # 2160p only: a tier-1 1080p waits, so a 2160p from the same group posted shortly after is grabbed instead of both.
+    s.cf("Tier 1 Group", "TV: a 2160p release from a WEB Tier 01 or Remux Tier 01 group. Skips the 60-minute delay.")
+    s.cond("Tier 1 Group", "2160p", "resolution", "2160p", required=1, arr="sonarr")
+    copy_groups("Tier 1 Group", "WEB Tier 01", "sonarr")
+    copy_groups("Tier 1 Group", "Remux Tier 01", "sonarr")
+
     # IMAX covers IMAX Enhanced too, so both print and score as plain IMAX.
     s.add("DELETE FROM custom_format_conditions WHERE custom_format_name = 'IMAX' AND name = 'NOT: IMAX Enhanced';")
     # Only spelled-out services, IMAX and the audio formats print; everything else is off.
@@ -341,6 +384,25 @@ def tests() -> SQL:
         ("DTS-X", "Heat (1995) {imdb-tt0113277} Remux-2160p HDR10 DTS-X 7.1-GRP", 1, m),
         ("DTS-HD MA", "Heat.1995.2160p.BluRay.REMUX.HEVC.DTS-X.7.1-GRP", 0, m),
         ("LPCM", "Heat.1995.1080p.BluRay.REMUX.AVC.LPCM.2.0-GRP", 1, m),
+        ("Top Remux", "Dune.2021.2160p.UHD.BluRay.REMUX.DV.HDR10+.HEVC.TrueHD.Atmos.7.1-FraMeSToR", 1, m),
+        ("Top Remux", "Dune (2021) {imdb-tt1160419} Remux-2160p DV HDR10Plus TrueHD Atmos 7.1-CiNEPHiLES", 1, m),
+        ("Top Remux", "Dune.2021.2160p.UHD.BluRay.REMUX.DV.HDR.HEVC.TrueHD.Atmos.7.1-FraMeSToR", 0, m),
+        ("Top Remux", "Dune.2021.2160p.UHD.BluRay.REMUX.DV.HDR10+.HEVC.TrueHD.Atmos.7.1-GRP", 0, m),
+        ("Top Remux", "Dune.2021.1080p.BluRay.REMUX.AVC.TrueHD.Atmos.7.1-FraMeSToR", 0, m),
+        ("Top Remux", "Dune.2021.2160p.AMZN.WEB-DL.DDP5.1.Atmos.DV.HDR10+.H.265-FLUX", 0, m),
+        ("Tier 1 Group", "Some.Show.S01E01.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX", 1, t),
+        ("Tier 1 Group", "Some.Show.S01E01.2160p.UHD.BluRay.REMUX.DV.HDR.HEVC.TrueHD.Atmos.7.1-FraMeSToR", 1, t),
+        ("Tier 1 Group", "Some.Show.S01E01.1080p.NF.WEB-DL.DDP5.1.H.264-FLUX", 0, t),
+        ("Tier 1 Group", "Some.Show.S01E01.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FraMeSToR", 0, t),
+        ("Tier 1 Group", "Some.Show.S01E01.2160p.NF.WEB-DL.DDP5.1.H.265-GRP", 0, t),
+        ("Tier 1 Group", "Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.H.265-FLUX", 0, m),
+        ("Band: Remux-2160p", "Heat.1995.2160p.UHD.BluRay.REMUX.HEVC.TrueHD.Atmos-GRP", 1, m),
+        ("Band: Remux-2160p", "Heat.S01E01.2160p.UHD.BluRay.REMUX.HEVC.TrueHD.Atmos-GRP", 1, t),
+        ("Band: Remux-2160p", "Heat.1995.2160p.AMZN.WEB-DL.DDP5.1.H.265-GRP", 0, m),
+        ("Band: WEB-DL 2160p", "Heat.1995.2160p.AMZN.WEB-DL.DDP5.1.H.265-GRP", 1, m),
+        ("Band: Remux-1080p", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 1, m),
+        ("Band: WEB-DL 1080p", "Heat.S01E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-GRP", 1, t),
+        ("Band: WEB-DL 1080p", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 0, m),
     ]:
         s.test(cf, title, should, kind)
     return s
@@ -383,7 +445,7 @@ def profiles() -> SQL:
     s = SQL()
     naming = {spelled: 0 for spelled, _ in SERVICES.values()} | {n: 0 for n, _ in AUDIO} | {"IMAX": 0}
 
-    scores = dict(LADDER_SCORES)
+    scores = dict(LADDER_SCORES) | BYPASS_SCORES
     for lst, tiers in GIST.items():
         if lst == "UHD DV":
             continue
@@ -391,11 +453,11 @@ def profiles() -> SQL:
             for i, tag in enumerate(tags):
                 scores[f"Gist {lst}: {tag}"] = tier_score + position_bonus(i, len(tags))
     ladder_profile(
-        s, "Ladder",
+        s, "Best Available",
         "One ladder for movies and TV: 2160p Remux (final) > 2160p WEB-DL > 1080p Remux > 1080p WEB-DL. "
         "720p and SD are never grabbed automatically; grab them by hand from Interactive Search. WEB-DLs rank by "
         "vevv's source gist for their own HDR type, then HDR type, then group. Remuxes need lossless audio and "
-        "rank CiNEPHiLES > TRaSH tiers.",
+        "rank CiNEPHiLES > TRaSH tiers. Scores read as overall quality (bands of 10000 per rung); 100000+ skips the delay.",
         # 1080p WEB-DL is the lowest automatic grab. The 720p/SD scores (SD WEB-DL, DVD Remux, gist SD list)
         # stay defined for manual grabs and in case these rungs come back.
         ["Remux-2160p", "WEBDL-2160p", "Remux-1080p", "WEBDL-1080p"],
@@ -442,8 +504,12 @@ def media() -> SQL:
             if qn in ("Raw-HD", "BR-DISK") or (app == "sonarr" and qn in ("DVDSCR", "REGIONAL", "TELECINE", "TELESYNC", "CAM", "WORKPRINT", "DVD-R")):
                 continue
             s.add(f"INSERT INTO {app}_quality_definitions (name, quality_name, min_size, max_size, preferred_size) VALUES ('Unlimited', {q(qn)}, 0, 0, {pref});")
-    s.add("INSERT INTO delay_profiles (name, preferred_protocol, usenet_delay, torrent_delay, bypass_if_highest_quality) "
-          "VALUES ('No Delay', 'only_torrent', NULL, 0, 0);")
+    # Movies wait 48 hours and TV 60 minutes for a better release, even for remuxes; a score of BYPASS or more
+    # (Top Remux, Tier 1 Group) grabs at once. The DV libraries never reach it, so they always wait.
+    for name, delay in (("Movies", MOVIE_DELAY), ("TV", TV_DELAY)):
+        s.add("INSERT INTO delay_profiles (name, preferred_protocol, usenet_delay, torrent_delay, bypass_if_highest_quality, "
+              "bypass_if_above_custom_format_score, minimum_custom_format_score) "
+              f"VALUES ({q(name)}, 'only_torrent', NULL, {delay}, 0, 1, {BYPASS});")
     return s
 
 
@@ -451,8 +517,8 @@ def main():
     OUT.mkdir(exist_ok=True)
     custom_formats().write(OUT / "10.custom-formats.sql", "Custom formats: services, gist tiers, HDR, remux rules, naming-only audio")
     tests().write(OUT / "15.custom-format-tests.sql", "Release-title tests for this fork's custom formats")
-    profiles().write(OUT / "20.profiles.sql", "Quality profiles: Ladder (main apps) and DV Profile 5 (DV libraries)")
-    media().write(OUT / "30.media-management.sql", "Naming, media settings, quality definitions and delay profile")
+    profiles().write(OUT / "20.profiles.sql", "Quality profiles: Best Available (main apps) and DV Profile 5 (DV libraries)")
+    media().write(OUT / "30.media-management.sql", "Naming, media settings, quality definitions and delay profiles")
     print("wrote", ", ".join(p.name for p in sorted(OUT.glob("*.sql"))))
 
 
