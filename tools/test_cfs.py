@@ -75,11 +75,10 @@ def matches(conds, pats, title, kind):
         else:
             return None  # language, indexer flags, release type: not modelled
         hit = hit != bool(negate)
-        if required and not hit:
-            return False
-        if not required:
-            groups[ctype].append(hit)
-    return all(any(v) for v in groups.values())
+        groups[ctype].append((hit, required))
+    # the apps' rule: conditions are grouped by type; a group matches when no required condition fails and
+    # at least one condition in it (required or not, a satisfied negation included) matches
+    return all(not any(r and not h for h, r in v) and any(h for h, _ in v) for v in groups.values())
 
 
 def main():
