@@ -999,6 +999,9 @@ INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, 
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Remux Tier 03', 'AREY', 'sg-grp-AREY');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('WEB Tier 03', 'AREY', 'release_group', 'all', 0, 0);
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('WEB Tier 03', 'AREY', 'sg-grp-AREY');
+INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-bluray-3d-label', '\bBlu-ray 3D\b', 'Library naming for a 3D Blu-ray''s 2D video');
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('3D', 'Not library Blu-ray 3D label', 'release_title', 'all', 1, 1);
+INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('3D', 'Not library Blu-ray 3D label', 'sg-bluray-3d-label');
 DELETE FROM custom_format_conditions WHERE custom_format_name = 'IMAX' AND name = 'NOT: IMAX Enhanced';
 UPDATE custom_formats SET include_in_rename = 0;
 UPDATE custom_formats SET include_in_rename = 1 WHERE name IN ('Movies Anywhere', 'Microsoft Store', 'Google Play', 'Netflix', 'Amazon', 'iTunes', 'Apple TV+', 'Peacock', 'Stan', 'Hulu', 'Hotstar', 'Paramount+', 'Showtime', 'Disney+', 'HBO Max', 'Max', 'Sony Pictures Core', 'Crunchyroll', 'Kanopy', 'SkyShowtime', 'Tubi', 'Crave', 'BBC iPlayer', 'All 4', 'Roku', 'ITVX', 'IMAX', 'TrueHD Atmos', 'TrueHD', 'DTS-X', 'DTS-HD MA', 'LPCM', 'FLAC', 'DD+ Atmos', 'DD+', 'DD', 'DTS', 'AAC', 'Opus');

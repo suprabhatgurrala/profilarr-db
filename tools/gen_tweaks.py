@@ -331,6 +331,11 @@ def custom_formats() -> SQL:
         for cf in ("Remux Tier 03", "WEB Tier 03"):
             s.cond(cf, g, "release_group", rx, arr=arr)
 
+    # The library names a remux of a 3D disc's 2D video "<label> Blu-ray 3D Remux"; release names spell 3D
+    # discs BluRay.3D/BD3D/3D.HSBS, so this exact spelling is exempt from the 3D ban.
+    s.regex("sg-bluray-3d-label", r"\bBlu-ray 3D\b", "Library naming for a 3D Blu-ray's 2D video")
+    s.title("3D", "Not library Blu-ray 3D label", "sg-bluray-3d-label", negate=1, required=1)
+
     # IMAX covers IMAX Enhanced too, so both print and score as plain IMAX.
     s.add("DELETE FROM custom_format_conditions WHERE custom_format_name = 'IMAX' AND name = 'NOT: IMAX Enhanced';")
     # Only spelled-out services, IMAX and the audio formats print; everything else is off.
@@ -348,6 +353,10 @@ def tests() -> SQL:
     m, t = "movie", "series"
     for cf, title, should, kind in [
         ("Movies Anywhere", "Camp.Miasma.2023.1080p.WEB-DL.DDP5.1.H.264-GRP", 0, m),
+        ("3D", "Dial M for Murder (1954) {imdb-tt0046912} Warner Bros. (2012) Blu-ray 3D Remux [1080p 1.78 FLAC 1.0]-KRaLiMaRKo", 0, m),
+        ("3D", "Dial.M.for.Murder.1954.1080p.BluRay.3D.REMUX.AVC.FLAC.1.0-KRaLiMaRKo", 1, m),
+        ("3D", "Avatar.2009.1080p.3D.BluRay.Half-SBS.x264-GRP", 1, m),
+        ("3D", "Avatar.2009.BD3D.1080p.REMUX.MVC.DTS-HD.MA.5.1-GRP", 1, m),
         ("LQ (Release Title)", "Saw IV (2007) Blu-ray Remux [4K UHD 1.85 DV P7 FEL CMv4.0 HDR10+ TrueHD Atmos 7.1]-SiCFoI", 0, m),
         ("Remux Tier 03", "Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI", 1, m),
         ("Remux Tier 02", "Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI", 0, m),
