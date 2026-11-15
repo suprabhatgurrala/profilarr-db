@@ -489,16 +489,16 @@ def media() -> SQL:
         "{ Custom Format:" + n + "}" for n, _ in AUDIO) + "{ MediaInfo AudioChannels}{-Release Group}"
     movie_file = "{Movie CleanTitle} ({Release Year}) {imdb-{ImdbId}} {edition-{Edition Tags}} " + details
     s.add("INSERT INTO radarr_naming (name, rename, movie_format, movie_folder_format, replace_illegal_characters, colon_replacement_format) "
-          f"VALUES ('Ladder', 0, {q(movie_file)}, {q('{Movie CleanTitle} ({Release Year}) {imdb-{ImdbId}}')}, 1, 'smart');")
+          f"VALUES ('Best Available', 0, {q(movie_file)}, {q('{Movie CleanTitle} ({Release Year}) {imdb-{ImdbId}}')}, 1, 'smart');")
     series = "{Series CleanTitleWithoutYear} ({Series Year})"
     s.add("INSERT INTO sonarr_naming (name, rename, standard_episode_format, daily_episode_format, anime_episode_format, "
           "series_folder_format, season_folder_format, replace_illegal_characters, colon_replacement_format, multi_episode_style) VALUES ("
-          f"'Ladder', 0, {q(series + ' - S{season:00}E{episode:00} - {Episode CleanTitle} - ' + details)}, "
+          f"'Best Available', 0, {q(series + ' - S{season:00}E{episode:00} - {Episode CleanTitle} - ' + details)}, "
           f"{q(series + ' - {Air-Date} - {Episode CleanTitle} - ' + details)}, "
           f"{q(series + ' - S01E{absolute:0000} - {Episode CleanTitle} - ' + details)}, "
           f"{q(series + ' {tvdb-{TvdbId}}')}, {q('Season {season:00}')}, 1, 4, 0);")
     for app in ("radarr", "sonarr"):
-        s.add(f"INSERT INTO {app}_media_settings (name, propers_repacks, enable_media_info) VALUES ('Ladder', 'doNotPrefer', 1);")
+        s.add(f"INSERT INTO {app}_media_settings (name, propers_repacks, enable_media_info) VALUES ('Best Available', 'doNotPrefer', 1);")
         pref = 1999 if app == "radarr" else 995
         for qn in ALL_QUALITIES:
             if qn in ("Raw-HD", "BR-DISK") or (app == "sonarr" and qn in ("DVDSCR", "REGIONAL", "TELECINE", "TELESYNC", "CAM", "WORKPRINT", "DVD-R")):
