@@ -130,6 +130,12 @@ LADDER_SCORES = {
     "Band: Remux-2160p": 40000, "Band: WEB-DL 2160p": 30000, "Band: Remux-1080p": 20000, "Band: WEB-DL 1080p": 10000,
 }
 # Scores at or above this skip the delay profiles (see media()).
+# Groups moved from TRaSH's bans (or a higher tier) to the lowest tier: (format, condition) pairs to remove,
+# then group -> arr the Remux/WEB Tier 03 condition applies to.
+DEMOTE_FROM = [("LQ", "126811"), ("LQ (Release Title)", "SiCFoI + CM4v"), ("Remux Tier 02", "SiCFoI"),
+               ("Generated Dynamic HDR", "Flights"), ("WEB Tier 02", "Flights"), ("Anime LQ Groups", "AREY")]
+DEMOTED = {"126811": "all", "SiCFoI": "all", "Flights": "all", "AREY": "all"}
+
 BYPASS = 100000
 BYPASS_SCORES = {"Top Remux": BYPASS, "Tier 1 Group": BYPASS}
 MOVIE_DELAY, TV_DELAY = 48 * 60, 60  # minutes
@@ -316,6 +322,15 @@ def custom_formats() -> SQL:
     copy_groups("Tier 1 Group", "WEB Tier 01", "sonarr")
     copy_groups("Tier 1 Group", "Remux Tier 01", "sonarr")
 
+    # Demoted groups: TRaSH bans these for naming or generated-metadata problems; here they rank as the
+    # lowest tier instead, so their releases are still grabbed when nothing better exists.
+    for cf, cond in DEMOTE_FROM:
+        s.add(f"DELETE FROM custom_format_conditions WHERE custom_format_name = {q(cf)} AND name = {q(cond)};")
+    for g, arr in DEMOTED.items():
+        rx = s.regex(f"sg-grp-{g}", f"^({g})$", f"Release group {g}")
+        for cf in ("Remux Tier 03", "WEB Tier 03"):
+            s.cond(cf, g, "release_group", rx, arr=arr)
+
     # IMAX covers IMAX Enhanced too, so both print and score as plain IMAX.
     s.add("DELETE FROM custom_format_conditions WHERE custom_format_name = 'IMAX' AND name = 'NOT: IMAX Enhanced';")
     # Only spelled-out services, IMAX and the audio formats print; everything else is off.
@@ -333,6 +348,16 @@ def tests() -> SQL:
     m, t = "movie", "series"
     for cf, title, should, kind in [
         ("Movies Anywhere", "Camp.Miasma.2023.1080p.WEB-DL.DDP5.1.H.264-GRP", 0, m),
+        ("LQ (Release Title)", "Saw IV (2007) Blu-ray Remux [4K UHD 1.85 DV P7 FEL CMv4.0 HDR10+ TrueHD Atmos 7.1]-SiCFoI", 0, m),
+        ("Remux Tier 03", "Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI", 1, m),
+        ("Remux Tier 02", "Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI", 0, m),
+        ("LQ", "Ne.Zha.2019.2160p.UHD.BluRay.REMUX.DV.HDR.HEVC.TrueHD.Atmos.7.1-126811", 0, m),
+        ("Remux Tier 03", "Ne.Zha.2019.2160p.UHD.BluRay.REMUX.DV.HDR.HEVC.TrueHD.Atmos.7.1-126811", 1, m),
+        ("Generated Dynamic HDR", "Shrek.2.2004.2160p.UHD.BluRay.REMUX.DV.HDR.HEVC.DTS-X.7.1-Flights", 0, m),
+        ("Remux Tier 03", "Shrek.2.2004.2160p.UHD.BluRay.REMUX.DV.HDR.HEVC.DTS-X.7.1-Flights", 1, m),
+        ("WEB Tier 03", "Bad.Boys.for.Life.2020.2160p.CORE.WEB-DL.DTS-X.7.1.DV.HDR.H.265-Flights", 1, m),
+        ("Anime LQ Groups", "Formula.1.Drive.to.Survive.S01E01.2160p.NF.WEB-DL.DDP5.1.Atmos.H.265-AREY", 0, t),
+        ("WEB Tier 03", "Formula.1.Drive.to.Survive.S01E01.2160p.NF.WEB-DL.DDP5.1.Atmos.H.265-AREY", 1, t),
         ("Movies Anywhere", "Cast.Away.2000.2160p.MA.WEB-DL.DTS-HD.MA.5.1.DV.HDR10P.H.265-XEBEC", 1, m),
         ("Movies Anywhere", "Cast Away (2000) {imdb-tt0162222} Movies Anywhere WEBDL-2160p DV HDR10Plus DTS-HD MA 5.1-XEBEC", 1, m),
         ("Movies Anywhere", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 0, m),
