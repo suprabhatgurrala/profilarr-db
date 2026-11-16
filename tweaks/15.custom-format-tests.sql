@@ -8,6 +8,15 @@ INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, 
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D', 'Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D', 'Dial M for Murder (1954) Warner Bros. (2012) Blu-ray 3D Remux [1080p 1.78 FLAC 1.0] Half-SBS', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D', 'Avatar.2009.BD3D.1080p.REMUX.MVC.DTS-HD.MA.5.1-GRP', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D Remux', 'Spider-Man.Into.the.Spider.Verse.2018.3D.1080p.BluRay.REMUX.AVC.Atmos-EPSiLON', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D Remux', 'Dial.M.for.Murder.1954.1080p.BluRay.3D.REMUX.AVC.FLAC.1.0-KRaLiMaRKo', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D Remux', 'Avatar.2009.BD3D.1080p.REMUX.MVC.DTS-HD.MA.5.1-GRP', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D Remux', 'Avatar.2009.1080p.3D.BluRay.Half-SBS.x264-GRP', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D Remux', 'Avatar.2009.1080p.3D.BluRay.REMUX.Half-OU.DTS-HD.MA.5.1-GRP', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D Remux', 'Avatar.2009.1080p.BluRay.3D.FSBS.REMUX.DTS-HD.MA.5.1-GRP', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D Remux', 'Avatar.2009.1080p.3D.BluRay.x264.DTS-HD.MA.5.1-GRP', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D Remux', 'Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D Remux', 'Step.Up.3D.2010.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-GRP', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('LQ (Release Title)', 'Saw IV (2007) Blu-ray Remux [4K UHD 1.85 DV P7 FEL CMv4.0 HDR10+ TrueHD Atmos 7.1]-SiCFoI', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Remux Tier 03', 'Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Remux Tier 02', 'Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI', 'movie', 0, NULL);

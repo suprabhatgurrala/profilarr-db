@@ -99,6 +99,10 @@ RX = {
     "sg-lossless-audio": r"\b(TrueHD|DTS[ ._-]?HD[ ._-]?MA|DTS[ ._-]?X|DTS:X|LPCM|PCM|FLAC|Atmos)\b",
     "sg-remux": r"\bREMUX\b",
     "sg-cinephiles": r"^(CiNEPHiLES)$",
+    # After the year, so titles like "Step Up 3D (2010)" don't count. Radarr 3D keeps release names
+    # (no library_rename hook), so only scene spellings need to match.
+    "sg-3d": r"(?<=\b[12]\d{3}\b).*(\b|_)(3d|bd3d|mvc)(\b|_)",
+    "sg-3d-sbs-ou": r"(?<=\b[12]\d{3}\b).*(\b|_)([fh]?sbs|h?ou|h?tab|(half|full)[ ._-]?(sbs|ou|tab))(\b|_)",
 }
 
 # Audio printed in file names, one {Custom Format:X} token each. TRaSH's audio formats are mutually
@@ -282,6 +286,11 @@ def custom_formats() -> SQL:
     s.cf("DVD Remux", "Untouched DVD video. Same quality as a DVD encode in the apps, so ranked by score.")
     s.cond("DVD Remux", "DVD", "source", "dvd", required=1)
     s.title("DVD Remux", "Remux", "sg-remux")
+    s.cf("3D Remux", "Frame-packed (MVC) Blu-ray 3D remux: 3D in the title, a remux, and not SBS/OU. "
+         "Only the 3D profile scores it; MVC remuxes are often labelled AVC, so it doesn't require 'MVC'.")
+    s.title("3D Remux", "3D", "sg-3d")
+    s.title("3D Remux", "Not SBS/OU", "sg-3d-sbs-ou", negate=1)
+    s.cond("3D Remux", "Remux", "quality_modifier", "remux", required=1, arr="radarr")
     s.cf("SD WEB-DL", "480p/576p WEB-DL, ranked between DVD Remux and DVD encodes.")
     web_source(s, "SD WEB-DL")
     for r in ("2160p", "1080p", "720p"):
@@ -362,6 +371,15 @@ def tests() -> SQL:
         ("3D", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 0, m),
         ("3D", "Dial M for Murder (1954) Warner Bros. (2012) Blu-ray 3D Remux [1080p 1.78 FLAC 1.0] Half-SBS", 1, m),
         ("3D", "Avatar.2009.BD3D.1080p.REMUX.MVC.DTS-HD.MA.5.1-GRP", 1, m),
+        ("3D Remux", "Spider-Man.Into.the.Spider.Verse.2018.3D.1080p.BluRay.REMUX.AVC.Atmos-EPSiLON", 1, m),
+        ("3D Remux", "Dial.M.for.Murder.1954.1080p.BluRay.3D.REMUX.AVC.FLAC.1.0-KRaLiMaRKo", 1, m),
+        ("3D Remux", "Avatar.2009.BD3D.1080p.REMUX.MVC.DTS-HD.MA.5.1-GRP", 1, m),
+        ("3D Remux", "Avatar.2009.1080p.3D.BluRay.Half-SBS.x264-GRP", 0, m),
+        ("3D Remux", "Avatar.2009.1080p.3D.BluRay.REMUX.Half-OU.DTS-HD.MA.5.1-GRP", 0, m),
+        ("3D Remux", "Avatar.2009.1080p.BluRay.3D.FSBS.REMUX.DTS-HD.MA.5.1-GRP", 0, m),
+        ("3D Remux", "Avatar.2009.1080p.3D.BluRay.x264.DTS-HD.MA.5.1-GRP", 0, m),
+        ("3D Remux", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 0, m),
+        ("3D Remux", "Step.Up.3D.2010.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-GRP", 0, m),
         ("LQ (Release Title)", "Saw IV (2007) Blu-ray Remux [4K UHD 1.85 DV P7 FEL CMv4.0 HDR10+ TrueHD Atmos 7.1]-SiCFoI", 0, m),
         ("Remux Tier 03", "Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI", 1, m),
         ("Remux Tier 02", "Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI", 0, m),
@@ -514,6 +532,18 @@ def profiles() -> SQL:
         "both ranked by the gist's UHD DV tiers.",
         ["WEBDL-2160p", "WEBDL-1080p"], top="WEBDL-2160p", min_score=40000, until_score=999999, scores=naming | p5,
         bans=[b for b in BANS_COMMON if b != "Lossy Remux"])
+
+    # 3D library (Radarr 3D): frame-packed MVC remuxes only, for an MVC-capable player; Plex can't play them.
+    # Radarr has no 3D quality, so these are Remux-1080p and the 3D Remux format gates the grab.
+    three_d = {k: v for k, v in LADDER_SCORES.items()
+               if k.startswith(("Repack", "Remux Tier", "CiNEPHiLES", "Criterion", "Masters", "Vinegar", "Remaster"))}
+    three_d["3D Remux"] = 40000
+    ladder_profile(
+        s, "3D",
+        "Frame-packed (MVC) Blu-ray 3D remuxes only, for the 3D library (Radarr 3D). SBS/OU encodes, "
+        "2D releases and ISOs are never grabbed. Remuxes need lossless audio and rank CiNEPHiLES > TRaSH tiers.",
+        ["Remux-1080p"], top="Remux-1080p", min_score=40000, until_score=999999, scores=naming | three_d,
+        bans=[b for b in BANS_COMMON if b != "3D"])
     return s
 
 
@@ -556,7 +586,7 @@ def main():
     OUT.mkdir(exist_ok=True)
     custom_formats().write(OUT / "10.custom-formats.sql", "Custom formats: services, gist tiers, HDR, remux rules, naming-only audio")
     tests().write(OUT / "15.custom-format-tests.sql", "Release-title tests for this fork's custom formats")
-    profiles().write(OUT / "20.profiles.sql", "Quality profiles: Best Available (main apps) and DV Profile 5 (DV libraries)")
+    profiles().write(OUT / "20.profiles.sql", "Quality profiles: Best Available (main apps), DV Profile 5 (DV libraries) and 3D (3D library)")
     media().write(OUT / "30.media-management.sql", "Naming, media settings, quality definitions and delay profiles")
     print("wrote", ", ".join(p.name for p in sorted(OUT.glob("*.sql"))))
 

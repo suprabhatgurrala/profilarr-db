@@ -7,6 +7,8 @@ INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-hdr10pl
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-lossless-audio', '\b(TrueHD|DTS[ ._-]?HD[ ._-]?MA|DTS[ ._-]?X|DTS:X|LPCM|PCM|FLAC|Atmos)\b', NULL);
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-remux', '\bREMUX\b', NULL);
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-cinephiles', '^(CiNEPHiLES)$', NULL);
+INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-3d', '(?<=\b[12]\d{3}\b).*(\b|_)(3d|bd3d|mvc)(\b|_)', NULL);
+INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-3d-sbs-ou', '(?<=\b[12]\d{3}\b).*(\b|_)([fh]?sbs|h?ou|h?tab|(half|full)[ ._-]?(sbs|ou|tab))(\b|_)', NULL);
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-MA', '(?<!dts[ ._-]?hd[ ._-]?)\b(ma|movies[ ._-]anywhere)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Movies Anywhere followed by a WEB source');
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-MS', '\b(msft|ms|microsoft[ ._-]store)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Microsoft Store followed by a WEB source');
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-PLAY', '\b(play|google[ ._-]play)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Google Play followed by a WEB source');
@@ -922,6 +924,13 @@ INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, 
 INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('DVD Remux', 'DVD', 'dvd');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('DVD Remux', 'Remux', 'release_title', 'all', 0, 1);
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('DVD Remux', 'Remux', 'sg-remux');
+INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('3D Remux', 'Frame-packed (MVC) Blu-ray 3D remux: 3D in the title, a remux, and not SBS/OU. Only the 3D profile scores it; MVC remuxes are often labelled AVC, so it doesn''t require ''MVC''.', 0);
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('3D Remux', '3D', 'release_title', 'all', 0, 1);
+INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('3D Remux', '3D', 'sg-3d');
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('3D Remux', 'Not SBS/OU', 'release_title', 'all', 1, 1);
+INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('3D Remux', 'Not SBS/OU', 'sg-3d-sbs-ou');
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('3D Remux', 'Remux', 'quality_modifier', 'radarr', 0, 1);
+INSERT INTO condition_quality_modifiers (custom_format_name, condition_name, quality_modifier) VALUES ('3D Remux', 'Remux', 'remux');
 INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('SD WEB-DL', '480p/576p WEB-DL, ranked between DVD Remux and DVD encodes.', 0);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('SD WEB-DL', 'WEBDL', 'source', 'all', 0, 1);
 INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('SD WEB-DL', 'WEBDL', 'web_dl');
