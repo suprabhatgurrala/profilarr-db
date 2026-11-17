@@ -113,11 +113,12 @@ AUDIO = [("TrueHD Atmos", "TrueHD ATMOS"), ("TrueHD", None), ("DTS-X", "DTS X"),
          ("AAC", None), ("Opus", None)]
 
 # Technical rejections only. TRaSH's group-name bans (LQ, LQ (Release Title), Bad Dual Groups, Anime LQ Groups)
-# score 0: the private trackers already police release quality (user's call, 2026-11-17).
+# score 0: the private trackers already police release quality (user's call, 2026-11-17). Lossy Remux scores 0
+# too: it is mostly older discs that only ever had lossy audio (same day).
 BANS_COMMON = ["BR-DISK", "BR-DISK (BTN)", "3D", "Upscaled", "Generated Dynamic HDR",
                "Line/Mic Dubbed", "AV1", "Sing-Along Versions", "Black and White Editions",
                "Extras", "x265 (no HDR/DV)", "Retags", "Obfuscated", "Open Matte",
-               "Language: Not Original", "Lossy Remux"]
+               "Language: Not Original"]
 
 LADDER_SCORES = {
     "Special Edition": -5000,
@@ -280,7 +281,7 @@ def custom_formats() -> SQL:
     # Remuxes.
     s.cf("CiNEPHiLES", "Preferred remux group, ranked above TRaSH's Remux Tier 01.")
     s.cond("CiNEPHiLES", "CiNEPHiLES", "release_group", "sg-cinephiles", required=1)
-    s.cf("Lossy Remux", "Remux without lossless audio (TrueHD, DTS-HD MA, DTS:X, LPCM or FLAC). Banned.")
+    s.cf("Lossy Remux", "Remux without lossless audio (TrueHD, DTS-HD MA, DTS:X, LPCM or FLAC). Not scored.")
     s.cond("Lossy Remux", "Remux", "quality_modifier", "remux", required=1, arr="radarr")
     s.cond("Lossy Remux", "Remux Source", "source", "bluray_raw", required=1, arr="sonarr")
     s.title("Lossy Remux", "Not lossless", "sg-lossless-audio", negate=1)
@@ -533,7 +534,7 @@ def profiles() -> SQL:
         "Profile 5 Dolby Vision WEB-DLs only, for the DV libraries (RadarrDV, SonarrDV): 2160p > 1080p, "
         "both ranked by the gist's UHD DV tiers.",
         ["WEBDL-2160p", "WEBDL-1080p"], top="WEBDL-2160p", min_score=40000, until_score=999999, scores=naming | p5,
-        bans=[b for b in BANS_COMMON if b != "Lossy Remux"])
+        bans=BANS_COMMON)
 
     # 3D library (Radarr 3D): frame-packed MVC remuxes only, for an MVC-capable player; Plex can't play them.
     # Radarr has no 3D quality, so these are Remux-1080p and the 3D Remux format gates the grab.

@@ -910,7 +910,7 @@ INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUE
 INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('CiNEPHiLES', 'Preferred remux group, ranked above TRaSH''s Remux Tier 01.', 0);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('CiNEPHiLES', 'CiNEPHiLES', 'release_group', 'all', 0, 1);
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('CiNEPHiLES', 'CiNEPHiLES', 'sg-cinephiles');
-INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Lossy Remux', 'Remux without lossless audio (TrueHD, DTS-HD MA, DTS:X, LPCM or FLAC). Banned.', 0);
+INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Lossy Remux', 'Remux without lossless audio (TrueHD, DTS-HD MA, DTS:X, LPCM or FLAC). Not scored.', 0);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Lossy Remux', 'Remux', 'quality_modifier', 'radarr', 0, 1);
 INSERT INTO condition_quality_modifiers (custom_format_name, condition_name, quality_modifier) VALUES ('Lossy Remux', 'Remux', 'remux');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Lossy Remux', 'Remux Source', 'source', 'sonarr', 0, 1);
