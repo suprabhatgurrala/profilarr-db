@@ -177,10 +177,7 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'BR-DISK (BTN)', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', '3D', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Upscaled', 'all', -999999);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'LQ', 'all', -999999);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'LQ (Release Title)', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Generated Dynamic HDR', 'all', -999999);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Bad Dual Groups', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Line/Mic Dubbed', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'AV1', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Sing-Along Versions', 'all', -999999);
@@ -190,7 +187,6 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Retags', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Obfuscated', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Open Matte', 'all', -999999);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Anime LQ Groups', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Language: Not Original', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Lossy Remux', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'DV (w/o HDR fallback)', 'all', -999999);
@@ -296,10 +292,7 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'BR-DISK (BTN)', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', '3D', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Upscaled', 'all', -999999);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'LQ', 'all', -999999);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'LQ (Release Title)', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Generated Dynamic HDR', 'all', -999999);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Bad Dual Groups', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Line/Mic Dubbed', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'AV1', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Sing-Along Versions', 'all', -999999);
@@ -309,7 +302,6 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Retags', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Obfuscated', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Open Matte', 'all', -999999);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Anime LQ Groups', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Language: Not Original', 'all', -999999);
 UPDATE quality_profile_custom_formats SET arr_type = (SELECT min(c.arr_type) FROM custom_format_conditions c WHERE c.custom_format_name = quality_profile_custom_formats.custom_format_name) WHERE quality_profile_name = 'DV Profile 5' AND custom_format_name IN (SELECT custom_format_name FROM custom_format_conditions GROUP BY custom_format_name HAVING count(DISTINCT arr_type) = 1 AND min(arr_type) IN ('radarr', 'sonarr'));
 INSERT INTO quality_profiles (name, description, upgrades_allowed, minimum_custom_format_score, upgrade_until_score, upgrade_score_increment) VALUES ('3D', 'Frame-packed (MVC) Blu-ray 3D remuxes only, for the 3D library (Radarr 3D). SBS/OU encodes, 2D releases and ISOs are never grabbed. Remuxes need lossless audio and rank CiNEPHiLES > TRaSH tiers.', 1, 40000, 999999, 100);
@@ -399,10 +391,7 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'BR-DISK', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'BR-DISK (BTN)', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'Upscaled', 'all', -999999);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'LQ', 'all', -999999);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'LQ (Release Title)', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'Generated Dynamic HDR', 'all', -999999);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'Bad Dual Groups', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'Line/Mic Dubbed', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'AV1', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'Sing-Along Versions', 'all', -999999);
@@ -412,7 +401,6 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'Retags', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'Obfuscated', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'Open Matte', 'all', -999999);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'Anime LQ Groups', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'Language: Not Original', 'all', -999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('3D', 'Lossy Remux', 'all', -999999);
 UPDATE quality_profile_custom_formats SET arr_type = (SELECT min(c.arr_type) FROM custom_format_conditions c WHERE c.custom_format_name = quality_profile_custom_formats.custom_format_name) WHERE quality_profile_name = '3D' AND custom_format_name IN (SELECT custom_format_name FROM custom_format_conditions GROUP BY custom_format_name HAVING count(DISTINCT arr_type) = 1 AND min(arr_type) IN ('radarr', 'sonarr'));

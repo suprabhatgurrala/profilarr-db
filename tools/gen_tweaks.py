@@ -112,9 +112,11 @@ AUDIO = [("TrueHD Atmos", "TrueHD ATMOS"), ("TrueHD", None), ("DTS-X", "DTS X"),
          ("LPCM", "PCM"), ("FLAC", None), ("DD+ Atmos", "DD+ ATMOS"), ("DD+", None), ("DD", None), ("DTS", None),
          ("AAC", None), ("Opus", None)]
 
-BANS_COMMON = ["BR-DISK", "BR-DISK (BTN)", "3D", "Upscaled", "LQ", "LQ (Release Title)", "Generated Dynamic HDR",
-               "Bad Dual Groups", "Line/Mic Dubbed", "AV1", "Sing-Along Versions", "Black and White Editions",
-               "Extras", "x265 (no HDR/DV)", "Retags", "Obfuscated", "Open Matte", "Anime LQ Groups",
+# Technical rejections only. TRaSH's group-name bans (LQ, LQ (Release Title), Bad Dual Groups, Anime LQ Groups)
+# score 0: the private trackers already police release quality (user's call, 2026-11-17).
+BANS_COMMON = ["BR-DISK", "BR-DISK (BTN)", "3D", "Upscaled", "Generated Dynamic HDR",
+               "Line/Mic Dubbed", "AV1", "Sing-Along Versions", "Black and White Editions",
+               "Extras", "x265 (no HDR/DV)", "Retags", "Obfuscated", "Open Matte",
                "Language: Not Original", "Lossy Remux"]
 
 LADDER_SCORES = {
