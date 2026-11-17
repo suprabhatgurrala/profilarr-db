@@ -17,6 +17,15 @@ INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, 
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D Remux', 'Avatar.2009.1080p.3D.BluRay.x264.DTS-HD.MA.5.1-GRP', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D Remux', 'Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D Remux', 'Step.Up.3D.2010.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-GRP', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D Remux', 'The.Mandalorian.and.Grogu.2026.2160p.3D.DSNP.WEB-DL.DDP.5.1.Atmos.DV.H.265-AXON', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D WEB-DL', 'The.Mandalorian.and.Grogu.2026.2160p.3D.DSNP.WEB-DL.DDP.5.1.Atmos.DV.H.265-AXON', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D WEB-DL', 'The Mandalorian and Grogu 2026 2160p 3D DSNP WEB-DL DDP 5.1 Atmos DV H.265-AXON', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D WEB-DL', 'Some.Film.2026.1080p.DSNP.WEB-DL.DDP5.1.MV-HEVC-GRP', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D WEB-DL', 'Some.Film.2026.1080p.3D.DSNP.WEB-DL.Half-SBS.DDP5.1.H.264-GRP', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D WEB-DL', 'Some.Film.2026.2160p.DSNP.WEB-DL.DDP5.1.Atmos.DV.H.265-GRP', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D WEB-DL', 'Spider-Man.Into.the.Spider.Verse.2018.3D.1080p.BluRay.REMUX.AVC.Atmos-EPSiLON', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D WEB-DL', 'Step.Up.3D.2010.1080p.AMZN.WEB-DL.DDP5.1.H.264-GRP', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D', 'The.Mandalorian.and.Grogu.2026.2160p.3D.DSNP.WEB-DL.DDP.5.1.Atmos.DV.H.265-AXON', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('LQ (Release Title)', 'Saw IV (2007) Blu-ray Remux [4K UHD 1.85 DV P7 FEL CMv4.0 HDR10+ TrueHD Atmos 7.1]-SiCFoI', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Remux Tier 03', 'Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Remux Tier 02', 'Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI', 'movie', 0, NULL);

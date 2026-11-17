@@ -101,7 +101,7 @@ RX = {
     "sg-cinephiles": r"^(CiNEPHiLES)$",
     # After the year, so titles like "Step Up 3D (2010)" don't count. Radarr 3D keeps release names
     # (no library_rename hook), so only scene spellings need to match.
-    "sg-3d": r"(?<=\b[12]\d{3}\b).*(\b|_)(3d|bd3d|mvc)(\b|_)",
+    "sg-3d": r"(?<=\b[12]\d{3}\b).*(\b|_)(3d|bd3d|mvc|mv[ ._-]?hevc)(\b|_)",
     "sg-3d-sbs-ou": r"(?<=\b[12]\d{3}\b).*(\b|_)([fh]?sbs|h?ou|h?tab|(half|full)[ ._-]?(sbs|ou|tab))(\b|_)",
 }
 
@@ -294,6 +294,11 @@ def custom_formats() -> SQL:
     s.title("3D Remux", "3D", "sg-3d")
     s.title("3D Remux", "Not SBS/OU", "sg-3d-sbs-ou", negate=1)
     s.cond("3D Remux", "Remux", "quality_modifier", "remux", required=1, arr="radarr")
+    s.cf("3D WEB-DL", "Frame-packed (MV-HEVC) 3D WEB-DL, e.g. Disney+'s 3D streams: 3D in the title, a WEB-DL, "
+         "and not SBS/OU. Only the 3D profile scores it.")
+    s.title("3D WEB-DL", "3D", "sg-3d")
+    s.title("3D WEB-DL", "Not SBS/OU", "sg-3d-sbs-ou", negate=1)
+    web_source(s, "3D WEB-DL")
     s.cf("SD WEB-DL", "480p/576p WEB-DL, ranked between DVD Remux and DVD encodes.")
     web_source(s, "SD WEB-DL")
     for r in ("2160p", "1080p", "720p"):
@@ -383,6 +388,15 @@ def tests() -> SQL:
         ("3D Remux", "Avatar.2009.1080p.3D.BluRay.x264.DTS-HD.MA.5.1-GRP", 0, m),
         ("3D Remux", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 0, m),
         ("3D Remux", "Step.Up.3D.2010.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-GRP", 0, m),
+        ("3D Remux", "The.Mandalorian.and.Grogu.2026.2160p.3D.DSNP.WEB-DL.DDP.5.1.Atmos.DV.H.265-AXON", 0, m),
+        ("3D WEB-DL", "The.Mandalorian.and.Grogu.2026.2160p.3D.DSNP.WEB-DL.DDP.5.1.Atmos.DV.H.265-AXON", 1, m),
+        ("3D WEB-DL", "The Mandalorian and Grogu 2026 2160p 3D DSNP WEB-DL DDP 5.1 Atmos DV H.265-AXON", 1, m),
+        ("3D WEB-DL", "Some.Film.2026.1080p.DSNP.WEB-DL.DDP5.1.MV-HEVC-GRP", 1, m),
+        ("3D WEB-DL", "Some.Film.2026.1080p.3D.DSNP.WEB-DL.Half-SBS.DDP5.1.H.264-GRP", 0, m),
+        ("3D WEB-DL", "Some.Film.2026.2160p.DSNP.WEB-DL.DDP5.1.Atmos.DV.H.265-GRP", 0, m),
+        ("3D WEB-DL", "Spider-Man.Into.the.Spider.Verse.2018.3D.1080p.BluRay.REMUX.AVC.Atmos-EPSiLON", 0, m),
+        ("3D WEB-DL", "Step.Up.3D.2010.1080p.AMZN.WEB-DL.DDP5.1.H.264-GRP", 0, m),
+        ("3D", "The.Mandalorian.and.Grogu.2026.2160p.3D.DSNP.WEB-DL.DDP.5.1.Atmos.DV.H.265-AXON", 1, m),
         ("LQ (Release Title)", "Saw IV (2007) Blu-ray Remux [4K UHD 1.85 DV P7 FEL CMv4.0 HDR10+ TrueHD Atmos 7.1]-SiCFoI", 0, m),
         ("Remux Tier 03", "Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI", 1, m),
         ("Remux Tier 02", "Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI", 0, m),
@@ -536,17 +550,23 @@ def profiles() -> SQL:
         ["WEBDL-2160p", "WEBDL-1080p"], top="WEBDL-2160p", min_score=40000, until_score=999999, scores=naming | p5,
         bans=BANS_COMMON)
 
-    # 3D library (Radarr 3D): frame-packed MVC remuxes only, for an MVC-capable player; Plex can't play them.
-    # Radarr has no 3D quality, so these are Remux-1080p and the 3D Remux format gates the grab.
+    # 3D library (Radarr 3D): frame-packed 3D only, for a 3D-capable player; Plex can't play it. A 2160p
+    # MV-HEVC WEB-DL (Disney+ 3D, HDR/DV) is final and beats a 1080p MVC Blu-ray 3D remux; a 1080p 3D WEB-DL is last.
+    # Radarr has no 3D quality, so the 3D Remux and 3D WEB-DL formats gate the grab.
     three_d = {k: v for k, v in LADDER_SCORES.items()
-               if k.startswith(("Repack", "Remux Tier", "CiNEPHiLES", "Criterion", "Masters", "Vinegar", "Remaster"))}
+               if k.startswith(("Repack", "Remux Tier", "CiNEPHiLES", "Criterion", "Masters", "Vinegar", "Remaster",
+                                "WEB Tier"))}
     three_d["3D Remux"] = 40000
+    three_d["3D WEB-DL"] = 40000
     ladder_profile(
         s, "3D",
-        "Frame-packed (MVC) Blu-ray 3D remuxes only, for the 3D library (Radarr 3D). SBS/OU encodes, "
-        "2D releases and ISOs are never grabbed. Remuxes need lossless audio and rank CiNEPHiLES > TRaSH tiers.",
-        ["Remux-1080p"], top="Remux-1080p", min_score=40000, until_score=999999, scores=naming | three_d,
-        bans=[b for b in BANS_COMMON if b != "3D"])
+        "Frame-packed 3D only, for the 3D library (Radarr 3D): 2160p 3D WEB-DL (MV-HEVC, e.g. Disney+; final) "
+        "> Blu-ray 3D remux (MVC, 1080p) > 1080p 3D WEB-DL. SBS/OU encodes, 2D releases and ISOs are never grabbed. "
+        "Remuxes need lossless audio and rank CiNEPHiLES > TRaSH tiers.",
+        ["WEBDL-2160p", "Remux-1080p", "WEBDL-1080p"], top="WEBDL-2160p", min_score=40000, until_score=999999,
+        scores=naming | three_d,
+        # MV-HEVC is always HEVC, so TRaSH's x265 ban would reject every SDR 1080p 3D WEB-DL.
+        bans=[b for b in BANS_COMMON if b not in ("3D", "x265 (no HDR/DV)")])
     return s
 
 
