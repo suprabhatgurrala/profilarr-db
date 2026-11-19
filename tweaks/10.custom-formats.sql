@@ -20,6 +20,7 @@ INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-PCO
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-STAN', '\b(stan)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Stan followed by a WEB source');
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-HULU', '\b(hulu)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Hulu followed by a WEB source');
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-HTSR', '\b(htsr|hotstar)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Hotstar followed by a WEB source');
+INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-ZEE5', '\b(zee5|zee[ ._-]5)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'ZEE5 followed by a WEB source');
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-PMTP', '\b(pmtp|paramount[ ._-]?(\+|plus))(?=[ ._-])(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Paramount+ followed by a WEB source');
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-SHO', '\b(sho|showtime)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Showtime followed by a WEB source');
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-DSNP', '\b(dsnp|dsny|strp|disney[ ._-]?(\+|plus)|star[ ._-]?(\+|plus))(?=[ ._-])(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Disney+ followed by a WEB source');
@@ -105,6 +106,13 @@ INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, 
 INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('Hotstar', 'WEBDL', 'web_dl');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Hotstar', 'WEBRIP', 'source', 'all', 0, 0);
 INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('Hotstar', 'WEBRIP', 'webrip');
+INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('ZEE5', 'Naming only (score 0): prints ''ZEE5'' for ZEE5 releases.', 1);
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('ZEE5', 'ZEE5', 'release_title', 'all', 0, 1);
+INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('ZEE5', 'ZEE5', 'sg-svc-ZEE5');
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('ZEE5', 'WEBDL', 'source', 'all', 0, 0);
+INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('ZEE5', 'WEBDL', 'web_dl');
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('ZEE5', 'WEBRIP', 'source', 'all', 0, 0);
+INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('ZEE5', 'WEBRIP', 'webrip');
 INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Paramount+', 'Naming only (score 0): prints ''Paramount+'' for PMTP releases.', 1);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Paramount+', 'Paramount+', 'release_title', 'all', 0, 1);
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Paramount+', 'Paramount+', 'sg-svc-PMTP');
@@ -1018,4 +1026,4 @@ INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expr
 UPDATE regular_expressions SET pattern = '(?<=\b[12]\d{3}\b).*(\b|_)(?<!Blu-ray )(3d|[fh]?sbs|half[ ._-]ou)(\b|_)' WHERE name = '3D' AND pattern = '(?<=\b[12]\d{3}\b).*(\b|_)(3d|[fh]?sbs|half[ ._-]ou)(\b|_)';
 DELETE FROM custom_format_conditions WHERE custom_format_name = 'IMAX' AND name = 'NOT: IMAX Enhanced';
 UPDATE custom_formats SET include_in_rename = 0;
-UPDATE custom_formats SET include_in_rename = 1 WHERE name IN ('Movies Anywhere', 'Microsoft Store', 'Google Play', 'Netflix', 'Amazon', 'iTunes', 'Apple TV+', 'Peacock', 'Stan', 'Hulu', 'Hotstar', 'Paramount+', 'Showtime', 'Disney+', 'HBO Max', 'Max', 'Sony Pictures Core', 'Crunchyroll', 'Kanopy', 'SkyShowtime', 'Tubi', 'Crave', 'BBC iPlayer', 'All 4', 'Roku', 'ITVX', 'IMAX', 'TrueHD Atmos', 'TrueHD', 'DTS-X', 'DTS-HD MA', 'LPCM', 'FLAC', 'DD+ Atmos', 'DD+', 'DD', 'DTS', 'AAC', 'Opus');
+UPDATE custom_formats SET include_in_rename = 1 WHERE name IN ('Movies Anywhere', 'Microsoft Store', 'Google Play', 'Netflix', 'Amazon', 'iTunes', 'Apple TV+', 'Peacock', 'Stan', 'Hulu', 'Hotstar', 'ZEE5', 'Paramount+', 'Showtime', 'Disney+', 'HBO Max', 'Max', 'Sony Pictures Core', 'Crunchyroll', 'Kanopy', 'SkyShowtime', 'Tubi', 'Crave', 'BBC iPlayer', 'All 4', 'Roku', 'ITVX', 'IMAX', 'TrueHD Atmos', 'TrueHD', 'DTS-X', 'DTS-HD MA', 'LPCM', 'FLAC', 'DD+ Atmos', 'DD+', 'DD', 'DTS', 'AAC', 'Opus');

@@ -46,6 +46,8 @@ INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, 
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('HBO Max', 'Mad.Max.Fury.Road.2015.1080p.HMAX.WEB-DL.DD5.1.H.264-GRP', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Stan', 'Stan.and.Ollie.2018.1080p.AMZN.WEB-DL.DDP5.1.H.264-GRP', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Stan', 'Some.Show.S01E01.1080p.STAN.WEB-DL.AAC2.0.H.264-GRP', 'series', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('ZEE5', 'Some.Film.2010.1080p.ZEE5.WEB-DL.DD5.1.H.264-GRP', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('ZEE5', 'Some Film (2010) {imdb-tt1} ZEE5 WEBDL-1080p DD 5.1-GRP', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('BBC iPlayer', 'Some.Show.S01E01.1080p.iP.WEB-DL.AAC2.0.H.264-GRP', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Disney+', 'Idiocracy (2006) {imdb-tt0387808} Disney+ WEBDL-1080p DD+ 5.1-FLUX', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Disney+', 'Idiocracy (2006) {imdb-tt0387808} Disney+ 1080p WEB-DL EAC3 5.1-FLUX', 'movie', 1, NULL);
