@@ -15,7 +15,8 @@ as overall quality, highest first, so the apps' release lists and the delay bypa
     source tier    1000s    gist tier: SDR or HDR list, DV+HDR10 counts as HDR (T1 +2000 … bad -1000);
                             the UHD DV list only ranks Profile 5 in the DV profile
     HDR type       +100s    DV+HDR10 +200 > HDR10+ +100 > HDR10 0, within a tier
-    repack, IMAX   +100s    trigger an upgrade (upgrade increment is 100)
+    IMAX           +100     triggers an upgrade (upgrade increment is 100)
+    repack         0        Sonarr/Radarr's native preferAndUpgrade upgrades same-group repacks only
     tiebreakers    < 100    season pack 50, gist position <= 30, labels 4, group tier 1-3;
                             these only choose the first grab, never trigger an upgrade
     remux groups   +100s    CiNEPHiLES 400 > Remux Tier 01 300 > 02 200 > 03 100
@@ -123,7 +124,7 @@ BANS_COMMON = ["BR-DISK", "BR-DISK (BTN)", "3D", "Upscaled", "Generated Dynamic 
 
 LADDER_SCORES = {
     "Special Edition": -5000,
-    "Repack/Proper": 100, "Repack2": 200, "Repack3": 300,
+    "Repack/Proper": 0, "Repack2": 0, "Repack3": 0,  # repacks upgrade via propers_repacks=preferAndUpgrade (same group only)
     "IMAX": 100,  # also matches IMAX Enhanced (see custom_formats), which is not scored separately
     "Season Pack": 50,
     "Criterion Collection": 4, "Masters of Cinema": 4, "Vinegar Syndrome": 4, "Remaster": 4, "4K Remaster": 4,
@@ -473,6 +474,7 @@ def tests() -> SQL:
         ("Tier 1 Group", "Some.Show.S01E01.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FraMeSToR", 0, t),
         ("Tier 1 Group", "Some.Show.S01E01.2160p.NF.WEB-DL.DDP5.1.H.265-GRP", 0, t),
         ("Tier 1 Group", "Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.H.265-FLUX", 0, m),
+        ("Tier 1 Group", "Percy.Jackson.and.the.Olympians.S03E01.2160p.DSNP.WEB-DL.DDP5.1.Atmos.DV.H.265-Kitsune", 1, t),
         ("Band: Remux-2160p", "Heat.1995.2160p.UHD.BluRay.REMUX.HEVC.TrueHD.Atmos-GRP", 1, m),
         ("Band: Remux-2160p", "Heat.S01E01.2160p.UHD.BluRay.REMUX.HEVC.TrueHD.Atmos-GRP", 1, t),
         ("Band: Remux-2160p", "Heat.1995.2160p.AMZN.WEB-DL.DDP5.1.H.265-GRP", 0, m),
@@ -543,6 +545,8 @@ def profiles() -> SQL:
 
     p5 = {k: v for k, v in LADDER_SCORES.items() if k.startswith(("Repack", "WEB Tier", "Anime Web", "Season Pack"))}
     p5["DV (w/o HDR fallback)"] = 50000
+    # Profile 5 alone tops out near 52000, under BYPASS: a 2160p Tier 1 Group release skips the delay here too.
+    p5["Tier 1 Group"] = BYPASS
     for tier_score, tags in GIST["UHD DV"]:
         for i, tag in enumerate(tags):
             p5[f"Gist P5: {tag}"] = tier_score + position_bonus(i, len(tags))
@@ -593,14 +597,14 @@ def media() -> SQL:
           f"{q(series + ' - S01E{absolute:0000} - {Episode CleanTitle} - ' + details)}, "
           f"{q(series + ' {tvdb-{TvdbId}}')}, {q('Season {season:00}')}, 1, 4, 0);")
     for app in ("radarr", "sonarr"):
-        s.add(f"INSERT INTO {app}_media_settings (name, propers_repacks, enable_media_info) VALUES ('Best Available', 'doNotPrefer', 1);")
+        s.add(f"INSERT INTO {app}_media_settings (name, propers_repacks, enable_media_info) VALUES ('Best Available', 'preferAndUpgrade', 1);")
         pref = 1999 if app == "radarr" else 995
         for qn in ALL_QUALITIES:
             if qn in ("Raw-HD", "BR-DISK") or (app == "sonarr" and qn in ("DVDSCR", "REGIONAL", "TELECINE", "TELESYNC", "CAM", "WORKPRINT", "DVD-R")):
                 continue
             s.add(f"INSERT INTO {app}_quality_definitions (name, quality_name, min_size, max_size, preferred_size) VALUES ('Unlimited', {q(qn)}, 0, 0, {pref});")
     # Movies wait 48 hours and TV 60 minutes for a better release, even for remuxes; a score of BYPASS or more
-    # (Top Remux, Tier 1 Group) grabs at once. The DV libraries never reach it, so they always wait.
+    # (Top Remux, Tier 1 Group) grabs at once. In the DV libraries only Tier 1 Group (TV) reaches it.
     for name, delay in (("Movies", MOVIE_DELAY), ("TV", TV_DELAY)):
         s.add("INSERT INTO delay_profiles (name, preferred_protocol, usenet_delay, torrent_delay, bypass_if_highest_quality, "
               "bypass_if_above_custom_format_score, minimum_custom_format_score) "

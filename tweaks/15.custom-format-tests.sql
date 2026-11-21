@@ -101,6 +101,7 @@ INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, 
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Tier 1 Group', 'Some.Show.S01E01.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FraMeSToR', 'series', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Tier 1 Group', 'Some.Show.S01E01.2160p.NF.WEB-DL.DDP5.1.H.265-GRP', 'series', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Tier 1 Group', 'Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.H.265-FLUX', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Tier 1 Group', 'Percy.Jackson.and.the.Olympians.S03E01.2160p.DSNP.WEB-DL.DDP5.1.Atmos.DV.H.265-Kitsune', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Band: Remux-2160p', 'Heat.1995.2160p.UHD.BluRay.REMUX.HEVC.TrueHD.Atmos-GRP', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Band: Remux-2160p', 'Heat.S01E01.2160p.UHD.BluRay.REMUX.HEVC.TrueHD.Atmos-GRP', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Band: Remux-2160p', 'Heat.1995.2160p.AMZN.WEB-DL.DDP5.1.H.265-GRP', 'movie', 0, NULL);
