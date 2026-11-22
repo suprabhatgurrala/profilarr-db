@@ -17,7 +17,7 @@ as overall quality, highest first, so the apps' release lists and the delay bypa
     HDR type       +100s    DV+HDR10 +200 > HDR10+ +100 > HDR10 0, within a tier
     IMAX           +100     triggers an upgrade (upgrade increment is 100)
     repack         0        Sonarr/Radarr's native preferAndUpgrade upgrades same-group repacks only
-    tiebreakers    < 100    season pack 50, gist position <= 30, labels 4, group tier 1-3;
+    tiebreakers    < 100    season pack 50, preferred group 10-40, gist position <= 30, labels 4, group tier 1-3;
                             these only choose the first grab, never trigger an upgrade
     remux groups   +100s    CiNEPHiLES 400 > Remux Tier 01 300 > 02 200 > 03 100
 """
@@ -138,6 +138,12 @@ LADDER_SCORES = {
     "DVD Remux": 6000, "SD WEB-DL": 3000,
     "Band: Remux-2160p": 40000, "Band: WEB-DL 2160p": 30000, "Band: Remux-1080p": 20000, "Band: WEB-DL 1080p": 10000,
 }
+# Preferred groups, best first: (group, upstream release-group regex, score). Same-source WEB-DLs from these groups
+# are usually the same stream, so this only picks a consistent group across seasons. It outranks gist position and
+# group tiers, never HDR type or a better source. Kept small enough that a season pack (+50) from the top group
+# beats an existing unknown-group file by under the upgrade increment (50 + 40 + 3 < 100), so it never re-grabs.
+PREFERRED_GROUPS = [("FLUX", "FLUX", 40), ("Kitsune", "Kitsune (2)", 30), ("HONE", "HONE", 20), ("NTb", "NTb", 10)]
+LADDER_SCORES |= {f"Preferred Group: {g}": sc for g, _, sc in PREFERRED_GROUPS}
 # Scores at or above this skip the delay profiles (see media()).
 # Groups moved from TRaSH's bans (or a higher tier) to the lowest tier: (format, condition) pairs to remove,
 # then group -> arr the Remux/WEB Tier 03 condition applies to.
@@ -341,6 +347,13 @@ def custom_formats() -> SQL:
     copy_groups("Tier 1 Group", "WEB Tier 01", "sonarr")
     copy_groups("Tier 1 Group", "Remux Tier 01", "sonarr")
 
+    # Preferred groups: one format each, so each can carry its own score (see PREFERRED_GROUPS).
+    for g, rx, _ in PREFERRED_GROUPS:
+        cf = f"Preferred Group: {g}"
+        s.cf(cf, f"Release group {g}. A tiebreaker between otherwise equal releases (preferred groups, best first: "
+             + " > ".join(p for p, _, _ in PREFERRED_GROUPS) + ").")
+        s.cond(cf, g, "release_group", rx, required=1)
+
     # Demoted groups: TRaSH bans these for naming or generated-metadata problems; here they rank as the
     # lowest tier instead, so their releases are still grabbed when nothing better exists.
     for cf, cond in DEMOTE_FROM:
@@ -482,6 +495,13 @@ def tests() -> SQL:
         ("Band: Remux-1080p", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 1, m),
         ("Band: WEB-DL 1080p", "Heat.S01E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-GRP", 1, t),
         ("Band: WEB-DL 1080p", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 0, m),
+        ("Preferred Group: FLUX", "The.Diplomat.S04.2160p.NF.WEB-DL.DDP5.1.Atmos.DoVi.HDR.H.265-FLUX", 1, t),
+        ("Preferred Group: FLUX", "The Diplomat S04 2160p NF WEB-DL DD+ 5.1 Atmos DV HDR H.265-Kitsune", 0, t),
+        ("Preferred Group: Kitsune", "The Diplomat S04 2160p NF WEB-DL DD+ 5.1 Atmos DV HDR H.265-Kitsune", 1, t),
+        ("Preferred Group: HONE", "The.Diplomat.S03.Hybrid.2160p.NF.WEB-DL.DDP5.1.Atmos.DoVi.HDR.H.265-HONE", 1, t),
+        ("Preferred Group: HONE", "The Diplomat S02 2160p NF WEB-DL DD+ 5.1 Atmos DV HDR H.265-SiC", 0, t),
+        ("Preferred Group: NTb", "Some.Show.S01E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb", 1, t),
+        ("Preferred Group: NTb", "Some.Film.2010.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb", 1, m),
     ]:
         s.test(cf, title, should, kind)
     return s
@@ -543,7 +563,7 @@ def profiles() -> SQL:
         top="Remux-2160p", min_score=MIN_SCORE, until_score=MIN_SCORE, scores=naming | scores,
         bans=BANS_COMMON + ["DV (w/o HDR fallback)"])
 
-    p5 = {k: v for k, v in LADDER_SCORES.items() if k.startswith(("Repack", "WEB Tier", "Anime Web", "Season Pack"))}
+    p5 = {k: v for k, v in LADDER_SCORES.items() if k.startswith(("Repack", "WEB Tier", "Anime Web", "Season Pack", "Preferred Group"))}
     p5["DV (w/o HDR fallback)"] = 50000
     # Profile 5 alone tops out near 52000, under BYPASS: a 2160p Tier 1 Group release skips the delay here too.
     p5["Tier 1 Group"] = BYPASS

@@ -109,3 +109,10 @@ INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, 
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Band: Remux-1080p', 'Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Band: WEB-DL 1080p', 'Heat.S01E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-GRP', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Band: WEB-DL 1080p', 'Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Preferred Group: FLUX', 'The.Diplomat.S04.2160p.NF.WEB-DL.DDP5.1.Atmos.DoVi.HDR.H.265-FLUX', 'series', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Preferred Group: FLUX', 'The Diplomat S04 2160p NF WEB-DL DD+ 5.1 Atmos DV HDR H.265-Kitsune', 'series', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Preferred Group: Kitsune', 'The Diplomat S04 2160p NF WEB-DL DD+ 5.1 Atmos DV HDR H.265-Kitsune', 'series', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Preferred Group: HONE', 'The.Diplomat.S03.Hybrid.2160p.NF.WEB-DL.DDP5.1.Atmos.DoVi.HDR.H.265-HONE', 'series', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Preferred Group: HONE', 'The Diplomat S02 2160p NF WEB-DL DD+ 5.1 Atmos DV HDR H.265-SiC', 'series', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Preferred Group: NTb', 'Some.Show.S01E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb', 'series', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Preferred Group: NTb', 'Some.Film.2010.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb', 'movie', 1, NULL);
