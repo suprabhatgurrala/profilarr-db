@@ -101,6 +101,7 @@ RX = {
     "sg-lossless-audio": r"\b(TrueHD|DTS[ ._-]?HD[ ._-]?MA|DTS[ ._-]?X|DTS:X|LPCM|PCM|FLAC|Atmos)\b",
     "sg-remux": r"\bREMUX\b",
     "sg-cinephiles": r"^(CiNEPHiLES)$",
+    "sg-macp": r"^(MacP)$",
     # After the year, so titles like "Step Up 3D (2010)" don't count. Radarr 3D keeps release names
     # (no library_rename hook), so only scene spellings need to match.
     "sg-3d": r"(?<=\b[12]\d{3}\b).*(\b|_)(3d|bd3d|mvc|mv[ ._-]?hevc)(\b|_)",
@@ -301,6 +302,11 @@ def custom_formats() -> SQL:
     s.title("3D WEB-DL", "3D", "sg-3d")
     s.title("3D WEB-DL", "Not SBS/OU", "sg-3d-sbs-ou", negate=1)
     web_source(s, "3D WEB-DL")
+    # Jeopardy profile (Sonarr): HDTV captures are only wanted from MacP (1080p x264 encodes). Other groups' HDTV
+    # (e.g. BTN's 1080i) is banned there; WEB-DLs are unaffected. Only the Jeopardy profile scores it.
+    s.cf("HDTV (not MacP)", "HDTV release from any group but MacP. Only the Jeopardy profile scores it (as a ban).")
+    s.cond("HDTV (not MacP)", "HDTV", "source", "television", required=1, arr="sonarr")
+    s.cond("HDTV (not MacP)", "Not MacP", "release_group", "sg-macp", negate=1, required=1, arr="sonarr")
     s.cf("SD WEB-DL", "480p/576p WEB-DL, ranked between DVD Remux and DVD encodes.")
     web_source(s, "SD WEB-DL")
     for r in ("2160p", "1080p", "720p"):
@@ -399,6 +405,11 @@ def tests() -> SQL:
         ("3D WEB-DL", "Spider-Man.Into.the.Spider.Verse.2018.3D.1080p.BluRay.REMUX.AVC.Atmos-EPSiLON", 0, m),
         ("3D WEB-DL", "Step.Up.3D.2010.1080p.AMZN.WEB-DL.DDP5.1.H.264-GRP", 0, m),
         ("3D", "The.Mandalorian.and.Grogu.2026.2160p.3D.DSNP.WEB-DL.DDP.5.1.Atmos.DV.H.265-AXON", 1, m),
+        ("HDTV (not MacP)", "Jeopardy! 2026-11-18 1080p HDTV AAC 2.0 x264-MacP", 0, t),
+        ("HDTV (not MacP)", "Jeopardy! 2026-11-18 720p HDTV AAC 2.0 x264-MacP", 0, t),
+        ("HDTV (not MacP)", "Jeopardy! 2026-11-19 1080i HDTV AAC 5.1 H.264-BTN", 1, t),
+        ("HDTV (not MacP)", "Jeopardy.2026.11.19.1080p.WEB-DL.AAC2.0.H.264-GRP", 0, t),
+        ("HDTV (not MacP)", "Jeopardy.2026.11.19.1080p.HDTV.x264-NTb", 1, t),
         ("LQ (Release Title)", "Saw IV (2007) Blu-ray Remux [4K UHD 1.85 DV P7 FEL CMv4.0 HDR10+ TrueHD Atmos 7.1]-SiCFoI", 0, m),
         ("Remux Tier 03", "Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI", 1, m),
         ("Remux Tier 02", "Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI", 0, m),
@@ -574,6 +585,16 @@ def profiles() -> SQL:
         scores=naming | three_d,
         # MV-HEVC is always HEVC, so TRaSH's x265 ban would reject every SDR 1080p 3D WEB-DL.
         bans=[b for b in BANS_COMMON if b not in ("3D", "x265 (no HDR/DV)")])
+
+    # Jeopardy! (Sonarr): 1080p only, MacP's HDTV encodes or any WEB-DL, as equals (one quality group, so neither
+    # upgrades the other). Other groups' HDTV is banned; 720p and below are never grabbed.
+    jeopardy = {k: v for k, v in LADDER_SCORES.items() if k.startswith("Repack")}
+    ladder_profile(
+        s, "Jeopardy",
+        "Jeopardy! (Sonarr): 1080p MacP HDTV encodes or 1080p WEB-DLs, treated as equals. HDTV from other groups "
+        "(e.g. BTN 1080i), 720p and SD are never grabbed. Repacks upgrade.",
+        [("1080p", ["WEBDL-1080p", "HDTV-1080p"])], top="1080p", min_score=MIN_SCORE, until_score=MIN_SCORE,
+        scores=naming | jeopardy, bans=BANS_COMMON + ["HDTV (not MacP)"])
     return s
 
 
@@ -616,7 +637,7 @@ def main():
     OUT.mkdir(exist_ok=True)
     custom_formats().write(OUT / "10.custom-formats.sql", "Custom formats: services, gist tiers, HDR, remux rules, naming-only audio")
     tests().write(OUT / "15.custom-format-tests.sql", "Release-title tests for this fork's custom formats")
-    profiles().write(OUT / "20.profiles.sql", "Quality profiles: Best Available (main apps), DV Profile 5 (DV libraries) and 3D (3D library)")
+    profiles().write(OUT / "20.profiles.sql", "Quality profiles: Best Available (main apps), DV Profile 5 (DV libraries), 3D (3D library) and Jeopardy")
     media().write(OUT / "30.media-management.sql", "Naming, media settings, quality definitions and delay profiles")
     print("wrote", ", ".join(p.name for p in sorted(OUT.glob("*.sql"))))
 

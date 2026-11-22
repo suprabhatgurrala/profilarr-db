@@ -26,6 +26,11 @@ INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, 
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D WEB-DL', 'Spider-Man.Into.the.Spider.Verse.2018.3D.1080p.BluRay.REMUX.AVC.Atmos-EPSiLON', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D WEB-DL', 'Step.Up.3D.2010.1080p.AMZN.WEB-DL.DDP5.1.H.264-GRP', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('3D', 'The.Mandalorian.and.Grogu.2026.2160p.3D.DSNP.WEB-DL.DDP.5.1.Atmos.DV.H.265-AXON', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('HDTV (not MacP)', 'Jeopardy! 2026-11-18 1080p HDTV AAC 2.0 x264-MacP', 'series', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('HDTV (not MacP)', 'Jeopardy! 2026-11-18 720p HDTV AAC 2.0 x264-MacP', 'series', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('HDTV (not MacP)', 'Jeopardy! 2026-11-19 1080i HDTV AAC 5.1 H.264-BTN', 'series', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('HDTV (not MacP)', 'Jeopardy.2026.11.19.1080p.WEB-DL.AAC2.0.H.264-GRP', 'series', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('HDTV (not MacP)', 'Jeopardy.2026.11.19.1080p.HDTV.x264-NTb', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('LQ (Release Title)', 'Saw IV (2007) Blu-ray Remux [4K UHD 1.85 DV P7 FEL CMv4.0 HDR10+ TrueHD Atmos 7.1]-SiCFoI', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Remux Tier 03', 'Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Remux Tier 02', 'Saw.IV.2007.2160p.UHD.BluRay.REMUX.DV.HDR10P.HEVC.TrueHD.7.1.Atmos-SiCFoI', 'movie', 0, NULL);
