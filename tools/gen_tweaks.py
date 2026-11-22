@@ -17,9 +17,10 @@ as overall quality, highest first, so the apps' release lists and the delay bypa
     HDR type       +100s    DV+HDR10 +200 > HDR10+ +100 > HDR10 0, within a tier
     IMAX           +100     triggers an upgrade (upgrade increment is 100)
     repack         0        Sonarr/Radarr's native preferAndUpgrade upgrades same-group repacks only
-    tiebreakers    < 100    season pack 50, preferred group 10-40, gist position <= 30, labels 4, group tier 1-3;
+    tiebreakers    < 100    season pack 50, preferred (remux) group 10-40, gist position <= 30, labels 4,
+                            group tier 1-3;
                             these only choose the first grab, never trigger an upgrade
-    remux groups   +100s    CiNEPHiLES 400 > Remux Tier 01 300 > 02 200 > 03 100
+    remux groups   +100s    Remux Tier 01 300 > 02 200 > 03 100
 """
 from pathlib import Path
 
@@ -131,7 +132,7 @@ LADDER_SCORES = {
     "WEB Tier 01": 3, "WEB Tier 02": 2, "WEB Tier 03": 1,
     "Anime Web Tier 01": 3, "Anime Web Tier 02": 3, "Anime Web Tier 03": 2, "Anime Web Tier 04": 2,
     "Anime Web Tier 05": 1, "Anime Web Tier 06": 1,
-    "CiNEPHiLES": 400, "Remux Tier 01": 300, "Remux Tier 02": 200, "Remux Tier 03": 100,
+    "Remux Tier 01": 300, "Remux Tier 02": 200, "Remux Tier 03": 100,
     "Anime BD Tier 01": 300, "Anime BD Tier 02": 300, "Anime BD Tier 03": 200, "Anime BD Tier 04": 200,
     "Anime BD Tier 05": 100, "Anime BD Tier 06": 100, "Anime BD Tier 07": 100, "Anime BD Tier 08": 100,
     "HDR (2160p WEB)": 5000, "HDR: DV+HDR10": 200, "HDR: HDR10+": 100,
@@ -143,7 +144,10 @@ LADDER_SCORES = {
 # group tiers, never HDR type or a better source. Kept small enough that a season pack (+50) from the top group
 # beats an existing unknown-group file by under the upgrade increment (50 + 40 + 3 < 100), so it never re-grabs.
 PREFERRED_GROUPS = [("FLUX", "FLUX", 40), ("Kitsune", "Kitsune (2)", 30), ("HONE", "HONE", 20), ("NTb", "NTb", 10)]
-LADDER_SCORES |= {f"Preferred Group: {g}": sc for g, _, sc in PREFERRED_GROUPS}
+# Same for remuxes: a tiebreaker within a remux tier (CiNEPHiLES is also in Remux Tier 01), never an upgrade.
+PREFERRED_REMUX_GROUPS = [("CiNEPHiLES", "sg-cinephiles", 40)]
+PREFERRED = {"Preferred Group": PREFERRED_GROUPS, "Preferred Remux Group": PREFERRED_REMUX_GROUPS}
+LADDER_SCORES |= {f"{kind}: {g}": sc for kind, groups in PREFERRED.items() for g, _, sc in groups}
 # Scores at or above this skip the delay profiles (see media()).
 # Groups moved from TRaSH's bans (or a higher tier) to the lowest tier: (format, condition) pairs to remove,
 # then group -> arr the Remux/WEB Tier 03 condition applies to.
@@ -287,8 +291,6 @@ def custom_formats() -> SQL:
             web_source(s, cf)
 
     # Remuxes.
-    s.cf("CiNEPHiLES", "Preferred remux group, ranked above TRaSH's Remux Tier 01.")
-    s.cond("CiNEPHiLES", "CiNEPHiLES", "release_group", "sg-cinephiles", required=1)
     s.cf("Lossy Remux", "Remux without lossless audio (TrueHD, DTS-HD MA, DTS:X, LPCM or FLAC). Not scored.")
     s.cond("Lossy Remux", "Remux", "quality_modifier", "remux", required=1, arr="radarr")
     s.cond("Lossy Remux", "Remux Source", "source", "bluray_raw", required=1, arr="sonarr")
@@ -348,11 +350,12 @@ def custom_formats() -> SQL:
     copy_groups("Tier 1 Group", "Remux Tier 01", "sonarr")
 
     # Preferred groups: one format each, so each can carry its own score (see PREFERRED_GROUPS).
-    for g, rx, _ in PREFERRED_GROUPS:
-        cf = f"Preferred Group: {g}"
-        s.cf(cf, f"Release group {g}. A tiebreaker between otherwise equal releases (preferred groups, best first: "
-             + " > ".join(p for p, _, _ in PREFERRED_GROUPS) + ").")
-        s.cond(cf, g, "release_group", rx, required=1)
+    for kind, groups in PREFERRED.items():
+        for g, rx, _ in groups:
+            cf = f"{kind}: {g}"
+            s.cf(cf, f"Release group {g}. A tiebreaker between otherwise equal releases ({kind.lower()}s, best first: "
+                 + " > ".join(p for p, _, _ in groups) + ").")
+            s.cond(cf, g, "release_group", rx, required=1)
 
     # Demoted groups: TRaSH bans these for naming or generated-metadata problems; here they rank as the
     # lowest tier instead, so their releases are still grabbed when nothing better exists.
@@ -502,6 +505,10 @@ def tests() -> SQL:
         ("Preferred Group: HONE", "The Diplomat S02 2160p NF WEB-DL DD+ 5.1 Atmos DV HDR H.265-SiC", 0, t),
         ("Preferred Group: NTb", "Some.Show.S01E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb", 1, t),
         ("Preferred Group: NTb", "Some.Film.2010.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb", 1, m),
+        ("Preferred Remux Group: CiNEPHiLES", "Dune.2021.2160p.UHD.BluRay.REMUX.DV.HDR10+.HEVC.TrueHD.Atmos.7.1-CiNEPHiLES", 1, m),
+        ("Preferred Remux Group: CiNEPHiLES", "Dune (2021) {imdb-tt1160419} Remux-2160p DV HDR10Plus TrueHD Atmos 7.1-CiNEPHiLES", 1, m),
+        ("Preferred Remux Group: CiNEPHiLES", "Dune.2021.2160p.UHD.BluRay.REMUX.DV.HDR10+.HEVC.TrueHD.Atmos.7.1-FraMeSToR", 0, m),
+        ("Remux Tier 01", "Dune.2021.2160p.UHD.BluRay.REMUX.DV.HDR10+.HEVC.TrueHD.Atmos.7.1-CiNEPHiLES", 1, m),
     ]:
         s.test(cf, title, should, kind)
     return s
@@ -556,7 +563,7 @@ def profiles() -> SQL:
         "One ladder for movies and TV: 2160p Remux (final) > 2160p WEB-DL > 1080p Remux > 1080p WEB-DL. "
         "720p and SD are never grabbed automatically; grab them by hand from Interactive Search. WEB-DLs rank by "
         "vevv's source gist for their own HDR type, then HDR type, then group. Remuxes need lossless audio and "
-        "rank CiNEPHiLES > TRaSH tiers. Scores read as overall quality (bands of 10000 per rung); 100000+ skips the delay.",
+        "rank by TRaSH tier, then preferred group (CiNEPHiLES). Scores read as overall quality (bands of 10000 per rung); 100000+ skips the delay.",
         # 1080p WEB-DL is the lowest automatic grab. The 720p/SD scores (SD WEB-DL, DVD Remux, gist SD list)
         # stay defined for manual grabs and in case these rungs come back.
         ["Remux-2160p", "WEBDL-2160p", "Remux-1080p", "WEBDL-1080p"],
@@ -581,7 +588,7 @@ def profiles() -> SQL:
     # MV-HEVC WEB-DL (Disney+ 3D, HDR/DV) is final and beats a 1080p MVC Blu-ray 3D remux; a 1080p 3D WEB-DL is last.
     # Radarr has no 3D quality, so the 3D Remux and 3D WEB-DL formats gate the grab.
     three_d = {k: v for k, v in LADDER_SCORES.items()
-               if k.startswith(("Repack", "Remux Tier", "CiNEPHiLES", "Criterion", "Masters", "Vinegar", "Remaster",
+               if k.startswith(("Repack", "Remux Tier", "Preferred Remux Group", "Criterion", "Masters", "Vinegar", "Remaster",
                                 "WEB Tier"))}
     three_d["3D Remux"] = 40000
     three_d["3D WEB-DL"] = 40000
@@ -589,7 +596,7 @@ def profiles() -> SQL:
         s, "3D",
         "Frame-packed 3D only, for the 3D library (Radarr 3D): 2160p 3D WEB-DL (MV-HEVC, e.g. Disney+; final) "
         "> Blu-ray 3D remux (MVC, 1080p) > 1080p 3D WEB-DL. SBS/OU encodes, 2D releases and ISOs are never grabbed. "
-        "Remuxes need lossless audio and rank CiNEPHiLES > TRaSH tiers.",
+        "Remuxes need lossless audio and rank by TRaSH tier, then preferred group (CiNEPHiLES).",
         ["WEBDL-2160p", "Remux-1080p", "WEBDL-1080p"], top="WEBDL-2160p", min_score=40000, until_score=999999,
         scores=naming | three_d,
         # MV-HEVC is always HEVC, so TRaSH's x265 ban would reject every SDR 1080p 3D WEB-DL.

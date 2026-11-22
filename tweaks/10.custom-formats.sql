@@ -915,9 +915,6 @@ INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, 
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Gist P5: HTSR', 'Not HDR', 'sg-hdr-present');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Gist P5: HTSR', 'WEBDL', 'source', 'all', 0, 1);
 INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('Gist P5: HTSR', 'WEBDL', 'web_dl');
-INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('CiNEPHiLES', 'Preferred remux group, ranked above TRaSH''s Remux Tier 01.', 0);
-INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('CiNEPHiLES', 'CiNEPHiLES', 'release_group', 'all', 0, 1);
-INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('CiNEPHiLES', 'CiNEPHiLES', 'sg-cinephiles');
 INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Lossy Remux', 'Remux without lossless audio (TrueHD, DTS-HD MA, DTS:X, LPCM or FLAC). Not scored.', 0);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Lossy Remux', 'Remux', 'quality_modifier', 'radarr', 0, 1);
 INSERT INTO condition_quality_modifiers (custom_format_name, condition_name, quality_modifier) VALUES ('Lossy Remux', 'Remux', 'remux');
@@ -1009,6 +1006,9 @@ INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expr
 INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Preferred Group: NTb', 'Release group NTb. A tiebreaker between otherwise equal releases (preferred groups, best first: FLUX > Kitsune > HONE > NTb).', 0);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Preferred Group: NTb', 'NTb', 'release_group', 'all', 0, 1);
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Preferred Group: NTb', 'NTb', 'NTb');
+INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Preferred Remux Group: CiNEPHiLES', 'Release group CiNEPHiLES. A tiebreaker between otherwise equal releases (preferred remux groups, best first: CiNEPHiLES).', 0);
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Preferred Remux Group: CiNEPHiLES', 'CiNEPHiLES', 'release_group', 'all', 0, 1);
+INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Preferred Remux Group: CiNEPHiLES', 'CiNEPHiLES', 'sg-cinephiles');
 DELETE FROM custom_format_conditions WHERE custom_format_name = 'LQ' AND name = '126811';
 DELETE FROM custom_format_conditions WHERE custom_format_name = 'LQ (Release Title)' AND name = 'SiCFoI + CM4v';
 DELETE FROM custom_format_conditions WHERE custom_format_name = 'Remux Tier 02' AND name = 'SiCFoI';
