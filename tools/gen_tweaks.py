@@ -289,6 +289,12 @@ def custom_formats() -> SQL:
             s.title(cf, "Not HDR", "sg-hdr-present", negate=1)
             web_source(s, cf)
 
+    # Best Available only: a WEB-DL needs a known streaming service in the title (banned there).
+    s.cf("No Streaming Service", "WEB-DL whose title names none of the known streaming services. Banned in Best Available.")
+    web_source(s, "No Streaming Service")
+    for tag in SERVICES:
+        s.title("No Streaming Service", f"Not {tag}", f"sg-svc-{tag}", negate=1)
+
     # Remuxes.
     s.cf("Lossy Remux", "Remux without lossless audio (TrueHD, DTS-HD MA, DTS:X, LPCM or FLAC). Not scored.")
     s.cond("Lossy Remux", "Remux", "quality_modifier", "remux", required=1, arr="radarr")
@@ -499,6 +505,11 @@ def tests() -> SQL:
         ("Band: WEB-DL 2160p", "Heat.1995.2160p.AMZN.WEB-DL.DDP5.1.H.265-GRP", 1, m),
         ("Band: Remux-1080p", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 1, m),
         ("Band: WEB-DL 1080p", "Heat.S01E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-GRP", 1, t),
+        ("No Streaming Service", "Fjord.2026.1080p.WEB-DL.DDP5.1.H.264-GRP", 1, m),
+        ("No Streaming Service", "Fjord.2026.1080p.AMZN.WEB-DL.DDP5.1.H.264-GRP", 0, m),
+        ("No Streaming Service", "Fjord.2026.2160p.iT.WEB-DL.DDP5.1.H.265-GRP", 0, m),
+        ("No Streaming Service", "Fjord.S01E01.1080p.WEB-DL.DDP5.1.H.264-GRP", 1, t),
+        ("No Streaming Service", "Fjord.2026.2160p.UHD.BluRay.REMUX.HEVC.TrueHD.7.1-GRP", 0, m),
         ("Band: WEB-DL 1080p", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 0, m),
         ("Preferred Group: FLUX", "The.Diplomat.S04.2160p.NF.WEB-DL.DDP5.1.Atmos.DoVi.HDR.H.265-FLUX", 1, t),
         ("Preferred Group: FLUX", "The Diplomat S04 2160p NF WEB-DL DD+ 5.1 Atmos DV HDR H.265-Kitsune", 0, t),
@@ -563,14 +574,14 @@ def profiles() -> SQL:
     ladder_profile(
         s, "Best Available",
         "One ladder for movies and TV: 2160p Remux (final) > 2160p WEB-DL > 1080p Remux > 1080p WEB-DL. "
-        "720p and SD are never grabbed automatically; grab them by hand from Interactive Search. WEB-DLs rank by "
+        "720p and SD are never grabbed automatically; grab them by hand from Interactive Search. A WEB-DL must name a known streaming service. WEB-DLs rank by "
         "vevv's source gist for their own HDR type, then HDR type, then group. Remuxes need lossless audio and "
         "rank by TRaSH tier, then preferred group (CiNEPHiLES). Scores read as overall quality (bands of 10000 per rung); 100000+ skips the delay.",
         # 1080p WEB-DL is the lowest automatic grab. The 720p/SD scores (SD WEB-DL, DVD Remux, gist SD list)
         # stay defined for manual grabs and in case these rungs come back.
         ["Remux-2160p", "WEBDL-2160p", "Remux-1080p", "WEBDL-1080p"],
         top="Remux-2160p", min_score=MIN_SCORE, until_score=MIN_SCORE, scores=naming | scores,
-        bans=BANS_COMMON + ["DV (w/o HDR fallback)"])
+        bans=BANS_COMMON + ["DV (w/o HDR fallback)", "No Streaming Service"])
 
     p5 = {k: v for k, v in LADDER_SCORES.items() if k.startswith(("Repack", "WEB Tier", "Anime Web", "Season Pack", "Preferred Group"))}
     p5["DV (w/o HDR fallback)"] = 50000
