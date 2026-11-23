@@ -1027,7 +1027,7 @@ INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, 
 INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('Band: WEB-DL 1080p', 'WEBDL', 'web_dl');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Band: WEB-DL 1080p', '1080p', 'resolution', 'all', 0, 1);
 INSERT INTO condition_resolutions (custom_format_name, condition_name, resolution) VALUES ('Band: WEB-DL 1080p', '1080p', '1080p');
-INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Top Remux', 'Movies: 2160p remux from a Remux Tier 01 group with Dolby Vision and HDR10+. Skips the 96-hour delay.', 0);
+INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Top Remux', 'Movies: 2160p remux from a Remux Tier 01 group with Dolby Vision and HDR10+. Skips the 48-hour delay.', 0);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Top Remux', 'Remux', 'quality_modifier', 'radarr', 0, 1);
 INSERT INTO condition_quality_modifiers (custom_format_name, condition_name, quality_modifier) VALUES ('Top Remux', 'Remux', 'remux');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Top Remux', '2160p', 'resolution', 'radarr', 0, 1);
@@ -1038,6 +1038,15 @@ INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, 
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Top Remux', 'HDR10+', 'sg-hdr10plus');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) SELECT 'Top Remux', name, type, 'radarr', 0, 0 FROM custom_format_conditions WHERE custom_format_name = 'Remux Tier 01' AND type = 'release_group' AND arr_type IN ('all', 'radarr') AND name NOT IN (SELECT name FROM custom_format_conditions WHERE custom_format_name = 'Top Remux');
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) SELECT 'Top Remux', p.condition_name, p.regular_expression_name FROM condition_patterns p JOIN custom_format_conditions c ON c.custom_format_name = p.custom_format_name AND c.name = p.condition_name WHERE p.custom_format_name = 'Remux Tier 01' AND c.type = 'release_group' AND c.arr_type IN ('all', 'radarr') AND p.condition_name NOT IN (SELECT condition_name FROM condition_patterns WHERE custom_format_name = 'Top Remux');
+INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Movies Anywhere 2160p HDR', 'Movies: 2160p HDR WEB-DL from Movies Anywhere (the best source for the studios that use it). Skips the delay.', 0);
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Movies Anywhere 2160p HDR', 'Service', 'release_title', 'radarr', 0, 1);
+INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Movies Anywhere 2160p HDR', 'Service', 'sg-svc-MA');
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Movies Anywhere 2160p HDR', 'HDR', 'release_title', 'radarr', 0, 1);
+INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Movies Anywhere 2160p HDR', 'HDR', 'sg-hdr-present');
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Movies Anywhere 2160p HDR', '2160p', 'resolution', 'radarr', 0, 1);
+INSERT INTO condition_resolutions (custom_format_name, condition_name, resolution) VALUES ('Movies Anywhere 2160p HDR', '2160p', '2160p');
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Movies Anywhere 2160p HDR', 'WEBDL', 'source', 'radarr', 0, 1);
+INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('Movies Anywhere 2160p HDR', 'WEBDL', 'web_dl');
 INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Tier 1 Group', 'TV: a 2160p release from a WEB Tier 01 or Remux Tier 01 group. Skips the 60-minute delay.', 0);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Tier 1 Group', '2160p', 'resolution', 'sonarr', 0, 1);
 INSERT INTO condition_resolutions (custom_format_name, condition_name, resolution) VALUES ('Tier 1 Group', '2160p', '2160p');

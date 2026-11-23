@@ -116,6 +116,10 @@ INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, 
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('No Streaming Service', 'Fjord.2026.2160p.iT.WEB-DL.DDP5.1.H.265-GRP', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('No Streaming Service', 'Fjord.S01E01.1080p.WEB-DL.DDP5.1.H.264-GRP', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('No Streaming Service', 'Fjord.2026.2160p.UHD.BluRay.REMUX.HEVC.TrueHD.7.1-GRP', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Movies Anywhere 2160p HDR', 'Heat.1995.2160p.MA.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Movies Anywhere 2160p HDR', 'Heat.1995.2160p.MA.WEB-DL.DDP5.1.H.265-FLUX', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Movies Anywhere 2160p HDR', 'Heat.1995.1080p.MA.WEB-DL.DDP5.1.HDR.H.265-FLUX', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Movies Anywhere 2160p HDR', 'Heat.1995.2160p.AMZN.WEB-DL.DDP5.1.HDR.H.265-FLUX', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Band: WEB-DL 1080p', 'Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Preferred Group: FLUX', 'The.Diplomat.S04.2160p.NF.WEB-DL.DDP5.1.Atmos.DoVi.HDR.H.265-FLUX', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Preferred Group: FLUX', 'The Diplomat S04 2160p NF WEB-DL DD+ 5.1 Atmos DV HDR H.265-Kitsune', 'series', 0, NULL);

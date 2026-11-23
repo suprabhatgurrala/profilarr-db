@@ -157,8 +157,8 @@ DEMOTE_FROM = [("LQ", "126811"), ("LQ (Release Title)", "SiCFoI + CM4v"), ("Remu
 DEMOTED = {"126811": "all", "SiCFoI": "all", "Flights": "all", "AREY": "all"}
 
 BYPASS = 100000
-BYPASS_SCORES = {"Top Remux": BYPASS, "Tier 1 Group": BYPASS}
-MOVIE_DELAY, TV_DELAY = 96 * 60, 60  # minutes
+BYPASS_SCORES = {"Top Remux": BYPASS, "Tier 1 Group": BYPASS, "Movies Anywhere 2160p HDR": BYPASS}
+MOVIE_DELAY, TV_DELAY = 48 * 60, 60  # minutes
 
 ALL_QUALITIES = ["Remux-2160p", "WEBDL-2160p", "Remux-1080p", "WEBDL-1080p", "WEBDL-720p", "DVD", "WEBDL-480p",
                  "Raw-HD", "BR-DISK", "Bluray-2160p", "HDTV-2160p", "WEBRip-2160p", "Bluray-1080p", "HDTV-1080p",
@@ -342,12 +342,17 @@ def custom_formats() -> SQL:
               f"JOIN custom_format_conditions c ON c.custom_format_name = p.custom_format_name AND c.name = p.condition_name "
               f"WHERE p.custom_format_name = {q(src)} AND c.type = 'release_group' AND c.arr_type IN ('all', {q(arr)}) "
               f"AND p.condition_name NOT IN (SELECT condition_name FROM condition_patterns WHERE custom_format_name = {q(cf)});")
-    s.cf("Top Remux", "Movies: 2160p remux from a Remux Tier 01 group with Dolby Vision and HDR10+. Skips the 96-hour delay.")
+    s.cf("Top Remux", "Movies: 2160p remux from a Remux Tier 01 group with Dolby Vision and HDR10+. Skips the 48-hour delay.")
     s.cond("Top Remux", "Remux", "quality_modifier", "remux", required=1, arr="radarr")
     s.cond("Top Remux", "2160p", "resolution", "2160p", required=1, arr="radarr")
     s.cond("Top Remux", "DV", "release_title", "sg-dv", required=1, arr="radarr")
     s.cond("Top Remux", "HDR10+", "release_title", "sg-hdr10plus", required=1, arr="radarr")
     copy_groups("Top Remux", "Remux Tier 01", "radarr")
+    s.cf("Movies Anywhere 2160p HDR", "Movies: 2160p HDR WEB-DL from Movies Anywhere (the best source for the studios that use it). Skips the delay.")
+    s.cond("Movies Anywhere 2160p HDR", "Service", "release_title", "sg-svc-MA", required=1, arr="radarr")
+    s.cond("Movies Anywhere 2160p HDR", "HDR", "release_title", "sg-hdr-present", required=1, arr="radarr")
+    s.cond("Movies Anywhere 2160p HDR", "2160p", "resolution", "2160p", required=1, arr="radarr")
+    s.cond("Movies Anywhere 2160p HDR", "WEBDL", "source", "web_dl", required=1, arr="radarr")
     # 2160p only: a tier-1 1080p waits, so a 2160p from the same group posted shortly after is grabbed instead of both.
     s.cf("Tier 1 Group", "TV: a 2160p release from a WEB Tier 01 or Remux Tier 01 group. Skips the 60-minute delay.")
     s.cond("Tier 1 Group", "2160p", "resolution", "2160p", required=1, arr="sonarr")
@@ -510,6 +515,10 @@ def tests() -> SQL:
         ("No Streaming Service", "Fjord.2026.2160p.iT.WEB-DL.DDP5.1.H.265-GRP", 0, m),
         ("No Streaming Service", "Fjord.S01E01.1080p.WEB-DL.DDP5.1.H.264-GRP", 1, t),
         ("No Streaming Service", "Fjord.2026.2160p.UHD.BluRay.REMUX.HEVC.TrueHD.7.1-GRP", 0, m),
+        ("Movies Anywhere 2160p HDR", "Heat.1995.2160p.MA.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX", 1, m),
+        ("Movies Anywhere 2160p HDR", "Heat.1995.2160p.MA.WEB-DL.DDP5.1.H.265-FLUX", 0, m),
+        ("Movies Anywhere 2160p HDR", "Heat.1995.1080p.MA.WEB-DL.DDP5.1.HDR.H.265-FLUX", 0, m),
+        ("Movies Anywhere 2160p HDR", "Heat.1995.2160p.AMZN.WEB-DL.DDP5.1.HDR.H.265-FLUX", 0, m),
         ("Band: WEB-DL 1080p", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 0, m),
         ("Preferred Group: FLUX", "The.Diplomat.S04.2160p.NF.WEB-DL.DDP5.1.Atmos.DoVi.HDR.H.265-FLUX", 1, t),
         ("Preferred Group: FLUX", "The Diplomat S04 2160p NF WEB-DL DD+ 5.1 Atmos DV HDR H.265-Kitsune", 0, t),
@@ -643,7 +652,7 @@ def media() -> SQL:
             if qn in ("Raw-HD", "BR-DISK") or (app == "sonarr" and qn in ("DVDSCR", "REGIONAL", "TELECINE", "TELESYNC", "CAM", "WORKPRINT", "DVD-R")):
                 continue
             s.add(f"INSERT INTO {app}_quality_definitions (name, quality_name, min_size, max_size, preferred_size) VALUES ('Unlimited', {q(qn)}, 0, 0, {pref});")
-    # Movies wait 96 hours and TV 60 minutes for a better release, even for remuxes; a score of BYPASS or more
+    # Movies wait 48 hours and TV 60 minutes for a better release, even for remuxes; a score of BYPASS or more
     # (Top Remux, Tier 1 Group) grabs at once. In the DV libraries only Tier 1 Group (TV) reaches it.
     for name, delay in (("Movies", MOVIE_DELAY), ("TV", TV_DELAY)):
         s.add("INSERT INTO delay_profiles (name, preferred_protocol, usenet_delay, torrent_delay, bypass_if_highest_quality, "

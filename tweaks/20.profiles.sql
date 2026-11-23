@@ -120,6 +120,7 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Preferred Remux Group: CiNEPHiLES', 'all', 40);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Top Remux', 'all', 100000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Tier 1 Group', 'all', 100000);
+INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Movies Anywhere 2160p HDR', 'all', 100000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Gist UHD SDR: BCORE', 'all', 4000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Gist UHD SDR: MA', 'all', 2010);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Gist UHD SDR: MS', 'all', 2005);
