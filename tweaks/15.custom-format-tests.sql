@@ -71,6 +71,9 @@ INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, 
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('HDR: DV+HDR10', 'Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.H.265-GRP', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('HDR: DV+HDR10', 'The.Bear.S01E01.2160p.HULU.WEB-DL.DDP5.1.DV.H.265-GRP', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('HDR: HDR10+', 'Some.Film.2010.2160p.AMZN.WEB-DL.DDP5.1.HDR10+.H.265-GRP', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('HDR (WEB)', 'Steps.2026.1080p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-Kitsune.mkv', 'movie', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('HDR (WEB)', 'Steps.2026.1080p.NF.WEB-DL.DDP5.1.Atmos.H.264-FLUX', 'movie', 0, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('HDR: DV+HDR10', 'Steps.2026.1080p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-CHORTLE.mkv', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Gist UHD HDR: MA', 'Some.Film.2010.2160p.MA.WEB-DL.DDP5.1.Atmos.HDR.H.265-GRP', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Gist UHD HDR: MA', 'Some.Film.2010.2160p.MA.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Gist UHD HDR: HULU', 'The.Bear.S01E01.2160p.HULU.WEB-DL.DDP5.1.DV.H.265-GRP', 'series', 1, NULL);

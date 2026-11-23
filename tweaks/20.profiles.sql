@@ -104,7 +104,7 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Anime BD Tier 06', 'all', 100);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Anime BD Tier 07', 'all', 100);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Anime BD Tier 08', 'all', 100);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'HDR (2160p WEB)', 'all', 5000);
+INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'HDR (WEB)', 'all', 5000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'HDR: DV+HDR10', 'all', 200);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'HDR: HDR10+', 'all', 100);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'DVD Remux', 'all', 6000);

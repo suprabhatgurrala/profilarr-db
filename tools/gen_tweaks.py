@@ -11,7 +11,8 @@ as overall quality, highest first, so the apps' release lists and the delay bypa
     bypass         +100000  skips the delay profile: Top Remux (movies), 2160p Tier 1 Group (TV)
     quality band   10000s   Remux-2160p 40000 > WEB-DL 2160p 30000 > Remux-1080p 20000 > WEB-DL 1080p 10000
     edition        -5000    Special Edition: theatrical cut is the default
-    HDR present    +5000    2160p WEB-DL only: any HDR beats any SDR
+    HDR present    +5000    WEB-DL: any HDR beats any SDR of the same resolution; a 2160p release still
+                            beats any 1080p one (the 1080p HDR case is mostly Netflix animation)
     source tier    1000s    gist tier: SDR or HDR list, DV+HDR10 counts as HDR (T1 +2000 … bad -1000);
                             the UHD DV list only ranks Profile 5 in the DV profile
     HDR type       +100s    DV+HDR10 +200 > HDR10+ +100 > HDR10 0, within a tier
@@ -135,7 +136,7 @@ LADDER_SCORES = {
     "Remux Tier 01": 300, "Remux Tier 02": 200, "Remux Tier 03": 100,
     "Anime BD Tier 01": 300, "Anime BD Tier 02": 300, "Anime BD Tier 03": 200, "Anime BD Tier 04": 200,
     "Anime BD Tier 05": 100, "Anime BD Tier 06": 100, "Anime BD Tier 07": 100, "Anime BD Tier 08": 100,
-    "HDR (2160p WEB)": 5000, "HDR: DV+HDR10": 200, "HDR: HDR10+": 100,
+    "HDR (WEB)": 5000, "HDR: DV+HDR10": 200, "HDR: HDR10+": 100,
     "DVD Remux": 6000, "SD WEB-DL": 3000,
     "Band: Remux-2160p": 40000, "Band: WEB-DL 2160p": 30000, "Band: Remux-1080p": 20000, "Band: WEB-DL 1080p": 10000,
 }
@@ -239,20 +240,18 @@ def custom_formats() -> SQL:
         s.add("INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) "
               f"SELECT {q(name)}, condition_name, regular_expression_name FROM condition_patterns WHERE custom_format_name = {q(src)};")
 
-    # HDR on 2160p WEB-DL.
-    s.cf("HDR (2160p WEB)", "Any HDR layer on a 2160p WEB-DL, so every HDR release ranks above SDR.")
-    s.title("HDR (2160p WEB)", "HDR", "sg-hdr-present")
-    s.cond("HDR (2160p WEB)", "2160p", "resolution", "2160p", required=1)
-    web_source(s, "HDR (2160p WEB)")
+    # HDR on WEB-DL, any resolution: 1080p HDR (mostly Netflix animation with no 2160p release) beats 1080p SDR,
+    # and the quality band keeps any 2160p release above it.
+    s.cf("HDR (WEB)", "Any HDR layer on a WEB-DL, so every HDR release ranks above SDR of the same resolution.")
+    s.title("HDR (WEB)", "HDR", "sg-hdr-present")
+    web_source(s, "HDR (WEB)")
     s.cf("HDR: DV+HDR10", "Dolby Vision with an HDR10 base layer (Hulu's 'DV' is Profile 8).")
     s.title("HDR: DV+HDR10", "DV", "sg-dv")
     s.title("HDR: DV+HDR10", "HDR", "sg-hdr-present")
-    s.cond("HDR: DV+HDR10", "2160p", "resolution", "2160p", required=1)
     web_source(s, "HDR: DV+HDR10")
     s.cf("HDR: HDR10+", "HDR10+ without Dolby Vision.")
     s.title("HDR: HDR10+", "HDR10+", "sg-hdr10plus")
     s.title("HDR: HDR10+", "Not DV", "sg-dv", negate=1)
-    s.cond("HDR: HDR10+", "2160p", "resolution", "2160p", required=1)
     web_source(s, "HDR: HDR10+")
 
     # Gist source tiers, one format per (list, service). The HDR condition picks the list
@@ -460,6 +459,9 @@ def tests() -> SQL:
         ("HDR: DV+HDR10", "Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.H.265-GRP", 0, m),
         ("HDR: DV+HDR10", "The.Bear.S01E01.2160p.HULU.WEB-DL.DDP5.1.DV.H.265-GRP", 1, t),
         ("HDR: HDR10+", "Some.Film.2010.2160p.AMZN.WEB-DL.DDP5.1.HDR10+.H.265-GRP", 1, m),
+        ("HDR (WEB)", "Steps.2026.1080p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-Kitsune.mkv", 1, m),
+        ("HDR (WEB)", "Steps.2026.1080p.NF.WEB-DL.DDP5.1.Atmos.H.264-FLUX", 0, m),
+        ("HDR: DV+HDR10", "Steps.2026.1080p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-CHORTLE.mkv", 1, m),
         ("Gist UHD HDR: MA", "Some.Film.2010.2160p.MA.WEB-DL.DDP5.1.Atmos.HDR.H.265-GRP", 1, m),
         ("Gist UHD HDR: MA", "Some.Film.2010.2160p.MA.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 1, m),
         ("Gist UHD HDR: HULU", "The.Bear.S01E01.2160p.HULU.WEB-DL.DDP5.1.DV.H.265-GRP", 1, t),
