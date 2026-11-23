@@ -1027,7 +1027,7 @@ INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, 
 INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('Band: WEB-DL 1080p', 'WEBDL', 'web_dl');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Band: WEB-DL 1080p', '1080p', 'resolution', 'all', 0, 1);
 INSERT INTO condition_resolutions (custom_format_name, condition_name, resolution) VALUES ('Band: WEB-DL 1080p', '1080p', '1080p');
-INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Top Remux', 'Movies: 2160p remux from a Remux Tier 01 group with Dolby Vision and HDR10+. Skips the 48-hour delay.', 0);
+INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Top Remux', 'Movies: 2160p remux from a Remux Tier 01 group with Dolby Vision and HDR10+. Skips the 96-hour delay.', 0);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Top Remux', 'Remux', 'quality_modifier', 'radarr', 0, 1);
 INSERT INTO condition_quality_modifiers (custom_format_name, condition_name, quality_modifier) VALUES ('Top Remux', 'Remux', 'remux');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Top Remux', '2160p', 'resolution', 'radarr', 0, 1);

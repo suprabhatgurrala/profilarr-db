@@ -158,7 +158,7 @@ DEMOTED = {"126811": "all", "SiCFoI": "all", "Flights": "all", "AREY": "all"}
 
 BYPASS = 100000
 BYPASS_SCORES = {"Top Remux": BYPASS, "Tier 1 Group": BYPASS}
-MOVIE_DELAY, TV_DELAY = 48 * 60, 60  # minutes
+MOVIE_DELAY, TV_DELAY = 96 * 60, 60  # minutes
 
 ALL_QUALITIES = ["Remux-2160p", "WEBDL-2160p", "Remux-1080p", "WEBDL-1080p", "WEBDL-720p", "DVD", "WEBDL-480p",
                  "Raw-HD", "BR-DISK", "Bluray-2160p", "HDTV-2160p", "WEBRip-2160p", "Bluray-1080p", "HDTV-1080p",
@@ -342,7 +342,7 @@ def custom_formats() -> SQL:
               f"JOIN custom_format_conditions c ON c.custom_format_name = p.custom_format_name AND c.name = p.condition_name "
               f"WHERE p.custom_format_name = {q(src)} AND c.type = 'release_group' AND c.arr_type IN ('all', {q(arr)}) "
               f"AND p.condition_name NOT IN (SELECT condition_name FROM condition_patterns WHERE custom_format_name = {q(cf)});")
-    s.cf("Top Remux", "Movies: 2160p remux from a Remux Tier 01 group with Dolby Vision and HDR10+. Skips the 48-hour delay.")
+    s.cf("Top Remux", "Movies: 2160p remux from a Remux Tier 01 group with Dolby Vision and HDR10+. Skips the 96-hour delay.")
     s.cond("Top Remux", "Remux", "quality_modifier", "remux", required=1, arr="radarr")
     s.cond("Top Remux", "2160p", "resolution", "2160p", required=1, arr="radarr")
     s.cond("Top Remux", "DV", "release_title", "sg-dv", required=1, arr="radarr")
@@ -643,7 +643,7 @@ def media() -> SQL:
             if qn in ("Raw-HD", "BR-DISK") or (app == "sonarr" and qn in ("DVDSCR", "REGIONAL", "TELECINE", "TELESYNC", "CAM", "WORKPRINT", "DVD-R")):
                 continue
             s.add(f"INSERT INTO {app}_quality_definitions (name, quality_name, min_size, max_size, preferred_size) VALUES ('Unlimited', {q(qn)}, 0, 0, {pref});")
-    # Movies wait 48 hours and TV 60 minutes for a better release, even for remuxes; a score of BYPASS or more
+    # Movies wait 96 hours and TV 60 minutes for a better release, even for remuxes; a score of BYPASS or more
     # (Top Remux, Tier 1 Group) grabs at once. In the DV libraries only Tier 1 Group (TV) reaches it.
     for name, delay in (("Movies", MOVIE_DELAY), ("TV", TV_DELAY)):
         s.add("INSERT INTO delay_profiles (name, preferred_protocol, usenet_delay, torrent_delay, bypass_if_highest_quality, "
