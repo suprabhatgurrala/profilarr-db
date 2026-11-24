@@ -8,7 +8,9 @@ Scoring scale. Quality order decides first; scores rank releases of the same qua
 as overall quality, highest first, so the apps' release lists and the delay bypass can use it:
 
     BAN            -9999999 never grabbed (minimum score is -1000000)
-    bypass         +1000000 skips the delay profile: Top Remux and Movies Anywhere 2160p HDR (movies), 2160p Tier 1 Group (TV)
+    bypass         +1000000 skips the delay profile. Default profile bypasses at 1M, the ma-studio tag profile at 2M:
+                            Top Remux, MA preferred group (movies) and 2160p Tier 1 Group (TV) score 2M; iTunes preferred group
+                            (movies) scores 1M, so MA studios still wait for the MA release (iTunes can be posted first)
     quality band   100000s  Remux-2160p 400000 > WEB-DL 2160p 300000 > Remux-1080p 200000 > WEB-DL 1080p 100000
     edition        -50000   Special Edition: theatrical cut is the default
     HDR present    +50000   WEB-DL: any HDR beats any SDR of the same resolution; a 2160p release still
@@ -170,8 +172,12 @@ DEMOTE_FROM = [("LQ", "126811"), ("LQ (Release Title)", "SiCFoI + CM4v"), ("Remu
                ("Generated Dynamic HDR", "Flights"), ("WEB Tier 02", "Flights"), ("Anime LQ Groups", "AREY")]
 DEMOTED = {"126811": "all", "SiCFoI": "all", "Flights": "all", "AREY": "all"}
 
+# Two bypass levels. The default delay profile bypasses at BYPASS; the ma-studio tag profile (set in Radarr by hand,
+# Profilarr only syncs the default profile) at BYPASS_MA, so an iTunes release still waits for the MA release there.
 BYPASS = 1000000
-BYPASS_SCORES = {"Top Remux": BYPASS, "Tier 1 Group": BYPASS, "Movies Anywhere 2160p HDR": BYPASS}
+BYPASS_MA = 2000000
+BYPASS_SCORES = {"Top Remux": BYPASS_MA, "Tier 1 Group": BYPASS_MA, "MA Preferred Group 2160p HDR": BYPASS_MA,
+                 "iTunes Preferred Group 2160p HDR": BYPASS}
 MOVIE_DELAY, TV_DELAY = 48 * 60, 60  # minutes
 
 ALL_QUALITIES = ["Remux-2160p", "WEBDL-2160p", "Remux-1080p", "WEBDL-1080p", "WEBDL-720p", "DVD", "WEBDL-480p",
@@ -362,11 +368,15 @@ def custom_formats() -> SQL:
     s.cond("Top Remux", "DV", "release_title", "sg-dv", required=1, arr="radarr")
     s.cond("Top Remux", "HDR10+", "release_title", "sg-hdr10plus", required=1, arr="radarr")
     copy_groups("Top Remux", "Remux Tier 01", "radarr")
-    s.cf("Movies Anywhere 2160p HDR", "Movies: 2160p HDR WEB-DL from Movies Anywhere (the best source for the studios that use it). Skips the delay.")
-    s.cond("Movies Anywhere 2160p HDR", "Service", "release_title", "sg-svc-MA", required=1, arr="radarr")
-    s.cond("Movies Anywhere 2160p HDR", "HDR", "release_title", "sg-hdr-present", required=1, arr="radarr")
-    s.cond("Movies Anywhere 2160p HDR", "2160p", "resolution", "2160p", required=1, arr="radarr")
-    s.cond("Movies Anywhere 2160p HDR", "WEBDL", "source", "web_dl", required=1, arr="radarr")
+    for cf, svc, desc in (("MA Preferred Group 2160p HDR", "MA", "Movies Anywhere (the best source for the studios that use it). Skips the delay everywhere."),
+                          ("iTunes Preferred Group 2160p HDR", "iT", "iTunes. Skips the delay except for MA studios (ma-studio tag), whose iTunes release may be posted before the MA one.")):
+        s.cf(cf, f"Movies: 2160p HDR WEB-DL from {desc} Preferred groups only (FLUX, Kitsune, HONE, NTb).")
+        s.cond(cf, "Service", "release_title", f"sg-svc-{svc}", required=1, arr="radarr")
+        s.cond(cf, "HDR", "release_title", "sg-hdr-present", required=1, arr="radarr")
+        s.cond(cf, "2160p", "resolution", "2160p", required=1, arr="radarr")
+        s.cond(cf, "WEBDL", "source", "web_dl", required=1, arr="radarr")
+        for g, rx, _ in PREFERRED_GROUPS:
+            s.cond(cf, g, "release_group", rx, arr="radarr")
     # 2160p only: a tier-1 1080p waits, so a 2160p from the same group posted shortly after is grabbed instead of both.
     s.cf("Tier 1 Group", "TV: a 2160p release from a WEB Tier 01 or Remux Tier 01 group. Skips the 60-minute delay.")
     s.cond("Tier 1 Group", "2160p", "resolution", "2160p", required=1, arr="sonarr")
@@ -529,10 +539,20 @@ def tests() -> SQL:
         ("No Streaming Service", "Fjord.2026.2160p.iT.WEB-DL.DDP5.1.H.265-GRP", 0, m),
         ("No Streaming Service", "Fjord.S01E01.1080p.WEB-DL.DDP5.1.H.264-GRP", 1, t),
         ("No Streaming Service", "Fjord.2026.2160p.UHD.BluRay.REMUX.HEVC.TrueHD.7.1-GRP", 0, m),
-        ("Movies Anywhere 2160p HDR", "Heat.1995.2160p.MA.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX", 1, m),
-        ("Movies Anywhere 2160p HDR", "Heat.1995.2160p.MA.WEB-DL.DDP5.1.H.265-FLUX", 0, m),
-        ("Movies Anywhere 2160p HDR", "Heat.1995.1080p.MA.WEB-DL.DDP5.1.HDR.H.265-FLUX", 0, m),
-        ("Movies Anywhere 2160p HDR", "Heat.1995.2160p.AMZN.WEB-DL.DDP5.1.HDR.H.265-FLUX", 0, m),
+        ("MA Preferred Group 2160p HDR", "Heat.1995.2160p.MA.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX", 1, m),
+        ("MA Preferred Group 2160p HDR", "Heat.1995.2160p.MA.WEB-DL.DDP5.1.H.265-FLUX", 0, m),
+        ("MA Preferred Group 2160p HDR", "Heat.1995.2160p.MA.WEB-DL.DDP5.1.HDR.H.265-CHORTLE", 0, m),
+        ("MA Preferred Group 2160p HDR", "Heat.1995.2160p.iT.WEB-DL.DDP5.1.HDR.H.265-FLUX", 0, m),
+        ("MA Preferred Group 2160p HDR", "Heat.1995.1080p.MA.WEB-DL.DDP5.1.HDR.H.265-FLUX", 0, m),
+        ("MA Preferred Group 2160p HDR", "Heat.1995.2160p.AMZN.WEB-DL.DDP5.1.HDR.H.265-FLUX", 0, m),
+        ("iTunes Preferred Group 2160p HDR", "Heat.1995.2160p.iT.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX", 1, m),
+        ("iTunes Preferred Group 2160p HDR", "Heat.1995.2160p.iT.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-Kitsune", 1, m),
+        ("iTunes Preferred Group 2160p HDR", "Heat.1995.2160p.iT.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-HONE", 1, m),
+        ("iTunes Preferred Group 2160p HDR", "Heat.1995.2160p.iT.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-NTb", 1, m),
+        ("iTunes Preferred Group 2160p HDR", "Heat.1995.2160p.iT.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-CHORTLE", 0, m),
+        ("iTunes Preferred Group 2160p HDR", "Heat.1995.2160p.AMZN.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX", 0, m),
+        ("iTunes Preferred Group 2160p HDR", "Heat.1995.2160p.iT.WEB-DL.DDP5.1.Atmos.H.265-FLUX", 0, m),
+        ("iTunes Preferred Group 2160p HDR", "Heat.1995.1080p.iT.WEB-DL.DDP5.1.HDR.H.265-FLUX", 0, m),
         ("Band: WEB-DL 1080p", "Heat.1995.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-FGT", 0, m),
         ("Preferred Group: FLUX", "The.Diplomat.S04.2160p.NF.WEB-DL.DDP5.1.Atmos.DoVi.HDR.H.265-FLUX", 1, t),
         ("Preferred Group: FLUX", "The Diplomat S04 2160p NF WEB-DL DD+ 5.1 Atmos DV HDR H.265-Kitsune", 0, t),
@@ -609,7 +629,7 @@ def profiles() -> SQL:
     p5 = {k: v for k, v in LADDER_SCORES.items() if k.startswith(("Repack", "WEB Tier", "Anime Web", "Season Pack", "Preferred Group"))}
     p5["DV (w/o HDR fallback)"] = 500000
     # Profile 5 alone tops out near 520000, under BYPASS: a 2160p Tier 1 Group release skips the delay here too.
-    p5["Tier 1 Group"] = BYPASS
+    p5["Tier 1 Group"] = BYPASS_MA
     for tier_score, tags in GIST["UHD DV"]:
         for i, tag in enumerate(tags):
             p5[source_cf("UHD DV", tag)] = tier_score + position_bonus(i, len(tags))
