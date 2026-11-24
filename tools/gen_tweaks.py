@@ -97,6 +97,17 @@ def position_bonus(i: int, n: int) -> int:
     return min(POSITION_MAX, POSITION_STEP * (n - 1 - i))
 
 
+# Source-tier format names: "Source Tier II (UHD HDR): AMZN". The numeral is the tier the service sits in on that list.
+TIER_NUMERAL = {NEAR_REMUX: "0", GOOD: "I", MIXED: "II", OK: "III", BAD: "IV"}
+
+
+def source_cf(lst: str, tag: str) -> str:
+    for tier_score, tags in GIST[lst]:
+        if tag in tags:
+            return f"Source Tier {TIER_NUMERAL[tier_score]} ({'P5' if lst == 'UHD DV' else lst}): {tag}"
+    raise KeyError((lst, tag))
+
+
 # Regexes shared by several formats.
 RX = {
     "sg-dv": r"\b(dv|dovi|dolby[ ._-]?v(ision)?)\b",
@@ -256,16 +267,16 @@ def custom_formats() -> SQL:
     s.title("HDR: HDR10+", "Not DV", "sg-dv", negate=1)
     web_source(s, "HDR: HDR10+")
 
-    # Gist source tiers, one format per (list, service). The HDR condition picks the list
+    # Source tiers, one format per (list, service). The HDR condition picks the list
     # for the release's HDR type; DV+HDR10 counts as HDR10. The UHD DV list only ranks
-    # Profile 5 releases (the "Gist P5" formats below).
+    # Profile 5 releases (the "Source Tier … (P5)" formats below).
     for lst, tiers in GIST.items():
         if lst == "UHD DV":
             continue
         for tier_score, tags in tiers:
             for tag in tags:
-                cf = f"Gist {lst}: {tag}"
-                s.cf(cf, f"{SERVICES[tag][0]} on the gist's {lst} list.")
+                cf = source_cf(lst, tag)
+                s.cf(cf, f"{SERVICES[tag][0]} on the {lst} source list (vevv's WEB source gist).")
                 s.title(cf, "Service", f"sg-svc-{tag}")
                 web_source(s, cf)
                 if lst.startswith("UHD"):
@@ -284,8 +295,8 @@ def custom_formats() -> SQL:
         # Profile 5 library: the UHD DV tiers rank both its 2160p and 1080p rungs.
     for tier_score, tags in GIST["UHD DV"]:
         for tag in tags:
-            cf = f"Gist P5: {tag}"
-            s.cf(cf, f"{SERVICES[tag][0]} Profile 5 DV, ranked by the gist's UHD DV list.")
+            cf = source_cf("UHD DV", tag)
+            s.cf(cf, f"{SERVICES[tag][0]} Profile 5 DV, ranked by the UHD DV source list (vevv's WEB source gist).")
             s.title(cf, "Service", f"sg-svc-{tag}")
             s.title(cf, "DV", "sg-dv")
             s.title(cf, "Not HDR", "sg-hdr-present", negate=1)
@@ -475,14 +486,14 @@ def tests() -> SQL:
         ("HDR (WEB)", "Steps.2026.1080p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-Kitsune.mkv", 1, m),
         ("HDR (WEB)", "Steps.2026.1080p.NF.WEB-DL.DDP5.1.Atmos.H.264-FLUX", 0, m),
         ("HDR: DV+HDR10", "Steps.2026.1080p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-CHORTLE.mkv", 1, m),
-        ("Gist UHD HDR: MA", "Some.Film.2010.2160p.MA.WEB-DL.DDP5.1.Atmos.HDR.H.265-GRP", 1, m),
-        ("Gist UHD HDR: MA", "Some.Film.2010.2160p.MA.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 1, m),
-        ("Gist UHD HDR: HULU", "The.Bear.S01E01.2160p.HULU.WEB-DL.DDP5.1.DV.H.265-GRP", 1, t),
-        ("Gist UHD HDR: NF", "Fallout.S02E01.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.H.265-GRP", 0, t),
-        ("Gist UHD SDR: MA", "Some.Film.2010.2160p.MA.WEB-DL.DDP5.1.H.265-GRP", 1, m),
-        ("Gist HD: DSNP", "Some.Film.2010.1080p.DSNP.WEB-DL.DDP5.1.H.264-GRP", 1, m),
-        ("Gist P5: NF", "Fallout.S02E01.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.H.265-GRP", 1, t),
-        ("Gist P5: NF", "Fallout.S02E01.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 0, t),
+        (source_cf("UHD HDR", "MA"), "Some.Film.2010.2160p.MA.WEB-DL.DDP5.1.Atmos.HDR.H.265-GRP", 1, m),
+        (source_cf("UHD HDR", "MA"), "Some.Film.2010.2160p.MA.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 1, m),
+        (source_cf("UHD HDR", "HULU"), "The.Bear.S01E01.2160p.HULU.WEB-DL.DDP5.1.DV.H.265-GRP", 1, t),
+        (source_cf("UHD HDR", "NF"), "Fallout.S02E01.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.H.265-GRP", 0, t),
+        (source_cf("UHD SDR", "MA"), "Some.Film.2010.2160p.MA.WEB-DL.DDP5.1.H.265-GRP", 1, m),
+        (source_cf("HD", "DSNP"), "Some.Film.2010.1080p.DSNP.WEB-DL.DDP5.1.H.264-GRP", 1, m),
+        (source_cf("UHD DV", "NF"), "Fallout.S02E01.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.H.265-GRP", 1, t),
+        (source_cf("UHD DV", "NF"), "Fallout.S02E01.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 0, t),
         ("DD+ Atmos", "Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 1, m),
         ("DD+ Atmos", "Some Film (2010) {imdb-tt1} Netflix WEBDL-2160p DV HDR10 DD+ Atmos 5.1-GRP", 1, m),
         ("DD+", "Some.Film.2010.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP", 0, m),
@@ -581,7 +592,7 @@ def profiles() -> SQL:
             continue
         for tier_score, tags in tiers:
             for i, tag in enumerate(tags):
-                scores[f"Gist {lst}: {tag}"] = tier_score + position_bonus(i, len(tags))
+                scores[source_cf(lst, tag)] = tier_score + position_bonus(i, len(tags))
     ladder_profile(
         s, "Best Available",
         "One ladder for movies and TV: 2160p Remux (final) > 2160p WEB-DL > 1080p Remux > 1080p WEB-DL. "
@@ -600,7 +611,7 @@ def profiles() -> SQL:
     p5["Tier 1 Group"] = BYPASS
     for tier_score, tags in GIST["UHD DV"]:
         for i, tag in enumerate(tags):
-            p5[f"Gist P5: {tag}"] = tier_score + position_bonus(i, len(tags))
+            p5[source_cf("UHD DV", tag)] = tier_score + position_bonus(i, len(tags))
     ladder_profile(
         s, "DV Profile 5",
         "Profile 5 Dolby Vision WEB-DLs only, for the DV libraries (RadarrDV, SonarrDV): 2160p > 1080p, "
