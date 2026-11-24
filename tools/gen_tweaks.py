@@ -15,10 +15,10 @@ as overall quality, highest first, so the apps' release lists and the delay bypa
     edition        -500000  Special Edition: theatrical cut is the default
     HDR present    +500000  WEB-DL: any HDR beats any SDR of the same resolution; a 2160p release still
                             beats any 1080p one (the 1080p HDR case is mostly Netflix animation)
-    source tier    100000s  source list: SDR or HDR list, DV+HDR10 counts as HDR (good +200000, mixed +100000, OK 0,
-                            bad -100000, BCORE +400000); the UHD DV list only ranks Profile 5 in the DV profile
-    source order   <= 45000 position within a tier, 5000 a step: beats HDR type, IMAX and every tiebreaker, and
-                            a better source in the same tier triggers an upgrade
+    source rank    5000s    order on the gist's SDR or HDR list (DV+HDR10 counts as HDR), 5000 a step; tiers only name
+                            the formats. 0 is the last entry above the bad tier (and any unlisted service), bad entries are
+                            negative. Beats HDR type, IMAX and every tiebreaker, and a better source triggers an upgrade.
+                            The UHD DV list only ranks Profile 5 in the DV profile
     HDR type       +1000s   DV+HDR10 +2000 > HDR10+ +1000 > HDR10 0, within the same source; triggers an upgrade
                             (the base HDR10 layer itself is "HDR present")
     IMAX           +1000    triggers an upgrade (upgrade increment is 1000)
@@ -74,12 +74,12 @@ SERVICES = {
     "ITVX": ("ITVX", r"\b(itvx)\b"),
 }
 
-# vevv's WEB source cheatsheet (gist 1d7037bb556c17e977b26b9f8f175853), best first within a tier.
-# Tier scores: the gist's "good" tier +200000, "mixed" +100000, "OK"/unlisted 0, "bad" -100000.
-GOOD, MIXED, OK, BAD = 200000, 100000, 0, -100000
-# Sony Pictures Core (BCORE): remux-like bitrates, so it beats every other WEB-DL and always triggers an upgrade.
+# vevv's WEB source cheatsheet (gist 1d7037bb556c17e977b26b9f8f175853), best first. Each list is scored by its
+# overall order; the tiers only name the formats ("Source Tier II (UHD HDR): AMZN") and set the zero point.
+GOOD, MIXED, OK, BAD = "I", "II", "III", "IV"
+# Sony Pictures Core (BCORE): remux-like bitrates, so it heads every list it's on (tier "0" in its format name).
 # A 2160p remux still replaces it; to keep a BCORE file, unmonitor the title in Radarr/Sonarr.
-NEAR_REMUX = 400000
+NEAR_REMUX = "0"
 GIST = {
     "UHD SDR": [(NEAR_REMUX, ["BCORE"]), (GOOD, ["MA", "MS", "PLAY"]), (MIXED, ["NF", "AMZN", "iT", "ATVP", "PCOK", "STAN"]),
                 (OK, ["HULU"]), (BAD, ["HTSR", "PMTP", "SHO"])],
@@ -92,26 +92,24 @@ GIST = {
            (BAD, ["HULU", "HTSR", "TUBI", "CRAV"])],
     "SD": [(GOOD, ["PMTP", "PLAY", "DSNP", "HMAX"]), (MIXED, ["NF", "MAX"]), (BAD, ["STAN", "iT", "AMZN"])],
 }
-# Source position (5000 a step) outranks HDR type, IMAX and every tiebreaker (2000 + 1000 + < 100 < 5000), so the better
-# source wins whatever the HDR metadata or group, and a better source in the same tier is an upgrade (user's call,
-# 2026-11-24: source first, then HDR type, which still upgrades). 9 steps cover the longest list; 45000 plus HDR type
-# stays under one tier (100000).
-POSITION_STEP, POSITION_MAX = 5000, 45000
+# Source rank: 5000 a step down the list, which outranks HDR type, IMAX and every tiebreaker (2000 + 1000 + < 100 < 5000),
+# so the better source wins whatever the HDR metadata or group, and a better source is an upgrade (user's call,
+# 2026-11-24: source first, then HDR type, which still upgrades). The last entry above the bad tier scores 0, level with
+# an unlisted service; bad entries go negative. The longest list (HD, 19 entries) spans 90000, under HDR present (500000).
+SOURCE_STEP = 5000
 UPSTREAM_NAMING = {"Hulu", "ITVX"}
 
 
-def position_bonus(i: int, n: int) -> int:
-    return min(POSITION_MAX, POSITION_STEP * (n - 1 - i))
-
-
-# Source-tier format names: "Source Tier II (UHD HDR): AMZN". The numeral is the tier the service sits in on that list.
-TIER_NUMERAL = {NEAR_REMUX: "0", GOOD: "I", MIXED: "II", OK: "III", BAD: "IV"}
+def source_scores(lst: str) -> dict[str, int]:
+    order = [tag for _, tags in GIST[lst] for tag in tags]
+    zero = len(order) - 1 - sum(len(tags) for tier, tags in GIST[lst] if tier == BAD)
+    return {tag: SOURCE_STEP * (zero - i) for i, tag in enumerate(order)}
 
 
 def source_cf(lst: str, tag: str) -> str:
-    for tier_score, tags in GIST[lst]:
+    for tier, tags in GIST[lst]:
         if tag in tags:
-            return f"Source Tier {TIER_NUMERAL[tier_score]} ({'P5' if lst == 'UHD DV' else lst}): {tag}"
+            return f"Source Tier {tier} ({'P5' if lst == 'UHD DV' else lst}): {tag}"
     raise KeyError((lst, tag))
 
 
@@ -284,7 +282,7 @@ def custom_formats() -> SQL:
     for lst, tiers in GIST.items():
         if lst == "UHD DV":
             continue
-        for tier_score, tags in tiers:
+        for _, tags in tiers:
             for tag in tags:
                 cf = source_cf(lst, tag)
                 s.cf(cf, f"{SERVICES[tag][0]} on the {lst} source list (vevv's WEB source gist).")
@@ -304,7 +302,7 @@ def custom_formats() -> SQL:
                     for r in ("2160p", "1080p", "720p"):
                         s.cond(cf, f"Not {r}", "resolution", r, negate=1, required=1)
         # Profile 5 library: the UHD DV tiers rank both its 2160p and 1080p rungs.
-    for tier_score, tags in GIST["UHD DV"]:
+    for _, tags in GIST["UHD DV"]:
         for tag in tags:
             cf = source_cf("UHD DV", tag)
             s.cf(cf, f"{SERVICES[tag][0]} Profile 5 DV, ranked by the UHD DV source list (vevv's WEB source gist).")
@@ -615,9 +613,8 @@ def profiles() -> SQL:
     for lst, tiers in GIST.items():
         if lst == "UHD DV":
             continue
-        for tier_score, tags in tiers:
-            for i, tag in enumerate(tags):
-                scores[source_cf(lst, tag)] = tier_score + position_bonus(i, len(tags))
+        for tag, sc in source_scores(lst).items():
+            scores[source_cf(lst, tag)] = sc
     ladder_profile(
         s, "Best Available",
         "One ladder for movies and TV: 2160p Remux (final) > 2160p WEB-DL > 1080p Remux > 1080p WEB-DL. "
@@ -634,9 +631,8 @@ def profiles() -> SQL:
     p5["DV (w/o HDR fallback)"] = 5000000
     # Profile 5 alone tops out near 5245000, under BYPASS: a 2160p Tier 1 Group release skips the delay here too.
     p5["Tier 1 Group"] = BYPASS_MA
-    for tier_score, tags in GIST["UHD DV"]:
-        for i, tag in enumerate(tags):
-            p5[source_cf("UHD DV", tag)] = tier_score + position_bonus(i, len(tags))
+    for tag, sc in source_scores("UHD DV").items():
+        p5[source_cf("UHD DV", tag)] = sc
     ladder_profile(
         s, "DV Profile 5",
         "Profile 5 Dolby Vision WEB-DLs only, for the DV libraries (RadarrDV, SonarrDV): 2160p > 1080p, "
