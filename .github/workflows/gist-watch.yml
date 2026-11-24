@@ -1,0 +1,64 @@
+name: Watch vevv's WEB source gist
+
+# Posts to Discord when vevv's WEB source gist gets a new revision, with the diff, so the GIST table in
+# tools/gen_tweaks.py can be updated by hand. The newest revision seen is remembered as an Actions cache key.
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+env:
+  GIST: 1d7037bb556c17e977b26b9f8f175853
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find the newest revision
+        id: gist
+        run: echo "version=$(gh api "gists/$GIST" --jq '.history[0].version')" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether it was already announced
+        id: seen
+        uses: actions/cache/restore@v4
+        with:
+          path: .gist-seen
+          key: gist-seen-${{ steps.gist.outputs.version }}
+          lookup-only: true
+
+      - name: Post the diff to Discord
+        if: steps.seen.outputs.cache-hit != 'true'
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.GIST_DISCORD_WEBHOOK }}
+        run: |
+          set -euo pipefail
+          gh api "gists/$GIST" > gist.json
+          new=$(jq -r '.history[0].version' gist.json)
+          old=$(jq -r '.history[1].version' gist.json)
+          when=$(jq -r '.history[0].committed_at' gist.json)
+          gh api "gists/$GIST/$old" --jq '.files[].content' > old.md
+          gh api "gists/$GIST/$new" --jq '.files[].content' > new.md
+          diff -U1 old.md new.md | tail -n +3 > changes.diff || true
+          # Discord caps a message at 2000 characters.
+          body=$(head -c 1500 changes.diff)
+          [ "$(wc -c < changes.diff)" -gt 1500 ] && body="$body"$'\n'"… (truncated)"
+          jq -n --arg when "$when" --arg body "$body" --arg url "https://gist.github.com/vevv/$GIST/revisions" \
+            '{content: ("**vevv'"'"'s WEB source gist was updated** (\($when))\nUpdate `GIST` in `tools/gen_tweaks.py` if a source moved. [All revisions](<\($url)>)\n```diff\n\($body)\n```")}' > message.json
+          curl -sSf -H 'Content-Type: application/json' -d @message.json "$DISCORD_WEBHOOK"
+
+      - name: Remember the revision
+        if: steps.seen.outputs.cache-hit != 'true'
+        run: touch .gist-seen
+
+      - name: Save
+        if: steps.seen.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .gist-seen
+          key: gist-seen-${{ steps.gist.outputs.version }}
