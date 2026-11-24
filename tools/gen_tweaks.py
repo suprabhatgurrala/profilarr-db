@@ -17,7 +17,8 @@ as overall quality, highest first, so the apps' release lists and the delay bypa
                             bad -10000, BCORE +40000); the UHD DV list only ranks Profile 5 in the DV profile
     HDR type       +1000s   DV+HDR10 +2000 > HDR10+ +1000 > HDR10 0, within a tier
     IMAX           +1000    triggers an upgrade (upgrade increment is 1000)
-    repack         0        Sonarr/Radarr's native preferAndUpgrade upgrades same-group repacks only
+    repack         0        propers_repacks=doNotPrefer: the apps ignore repacks, so score alone ranks releases;
+                            repacks are grabbed by external logic (autobrr), not by the apps
     source order   <= 900   position within a tier, 100 a step; always beats a group bonus
     tiebreakers    < 100    season pack 50, preferred (remux) group 10-40, labels 4, group tier 1-3;
                             these only choose the first grab, never trigger an upgrade
@@ -139,7 +140,7 @@ BANS_COMMON = ["BR-DISK", "BR-DISK (BTN)", "3D", "Upscaled", "Generated Dynamic 
 
 LADDER_SCORES = {
     "Special Edition": -50000,
-    "Repack/Proper": 0, "Repack2": 0, "Repack3": 0,  # repacks upgrade via propers_repacks=preferAndUpgrade (same group only)
+    "Repack/Proper": 0, "Repack2": 0, "Repack3": 0,  # doNotPrefer (2026-11-24): preferAndUpgrade ranks revision ahead of score, so a REPACK beat a better source
     "IMAX": 1000,  # also matches IMAX Enhanced (see custom_formats), which is not scored separately
     "Season Pack": 50,
     "Criterion Collection": 4, "Masters of Cinema": 4, "Vinegar Syndrome": 4, "Remaster": 4, "4K Remaster": 4,
@@ -659,7 +660,7 @@ def media() -> SQL:
           f"{q(series + ' - S01E{absolute:0000} - {Episode CleanTitle} - ' + details)}, "
           f"{q(series + ' {tvdb-{TvdbId}}')}, {q('Season {season:00}')}, 1, 4, 0);")
     for app in ("radarr", "sonarr"):
-        s.add(f"INSERT INTO {app}_media_settings (name, propers_repacks, enable_media_info) VALUES ('Best Available', 'preferAndUpgrade', 1);")
+        s.add(f"INSERT INTO {app}_media_settings (name, propers_repacks, enable_media_info) VALUES ('Best Available', 'doNotPrefer', 1);")
         pref = 1999 if app == "radarr" else 995
         for qn in ALL_QUALITIES:
             if qn in ("Raw-HD", "BR-DISK") or (app == "sonarr" and qn in ("DVDSCR", "REGIONAL", "TELECINE", "TELESYNC", "CAM", "WORKPRINT", "DVD-R")):
