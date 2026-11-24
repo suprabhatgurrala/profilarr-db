@@ -17,10 +17,10 @@ as overall quality, highest first, so the apps' release lists and the delay bypa
                             bad -10000, BCORE +40000); the UHD DV list only ranks Profile 5 in the DV profile
     HDR type       +1000s   DV+HDR10 +2000 > HDR10+ +1000 > HDR10 0, within a tier
     IMAX           +1000    triggers an upgrade (upgrade increment is 1000)
-    repack         0        propers_repacks=doNotPrefer: the apps ignore repacks, so score alone ranks releases;
-                            repacks are grabbed by external logic (autobrr), not by the apps
+    repack         5-7      propers_repacks=doNotPrefer: the apps ignore repacks, so score alone ranks releases; a repack only
+                            wins a tie (below preferred groups, never an upgrade). Repacks are grabbed by external logic (autobrr)
     source order   <= 900   position within a tier, 100 a step; always beats a group bonus
-    tiebreakers    < 100    season pack 50, preferred (remux) group 10-40, labels 4, group tier 1-3;
+    tiebreakers    < 100    season pack 50, preferred (remux) group 10-40, repack 5-7, labels 4, group tier 1-3;
                             these only choose the first grab, never trigger an upgrade
     remux groups   +1000s   Remux Tier 01 3000 > 02 2000 > 03 1000
 """
@@ -140,7 +140,7 @@ BANS_COMMON = ["BR-DISK", "BR-DISK (BTN)", "3D", "Upscaled", "Generated Dynamic 
 
 LADDER_SCORES = {
     "Special Edition": -50000,
-    "Repack/Proper": 0, "Repack2": 0, "Repack3": 0,  # doNotPrefer (2026-11-24): preferAndUpgrade ranks revision ahead of score, so a REPACK beat a better source
+    "Repack/Proper": 5, "Repack2": 6, "Repack3": 7,  # tiebreaker under every preferred group (10+); doNotPrefer (2026-11-24) because preferAndUpgrade ranks revision ahead of score
     "IMAX": 1000,  # also matches IMAX Enhanced (see custom_formats), which is not scored separately
     "Season Pack": 50,
     "Criterion Collection": 4, "Masters of Cinema": 4, "Vinegar Syndrome": 4, "Remaster": 4, "4K Remaster": 4,
