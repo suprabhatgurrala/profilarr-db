@@ -10,11 +10,12 @@ on:
 
 permissions:
   contents: read
-  actions: write
+  actions: write  # actions/cache/save
 
 env:
   GIST: 1d7037bb556c17e977b26b9f8f175853
-  GH_TOKEN: ${{ github.token }}
+  # The gist is public; GITHUB_TOKEN isn't allowed on the gists API, so these requests are anonymous.
+  API: https://api.github.com/gists/1d7037bb556c17e977b26b9f8f175853
 
 jobs:
   watch:
@@ -22,7 +23,9 @@ jobs:
     steps:
       - name: Find the newest revision
         id: gist
-        run: echo "version=$(gh api "gists/$GIST" --jq '.history[0].version')" >> "$GITHUB_OUTPUT"
+        run: |
+          version=$(curl -sSf "$API" | jq -er '.history[0].version')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Check whether it was already announced
         id: seen
@@ -38,12 +41,12 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.GIST_DISCORD_WEBHOOK }}
         run: |
           set -euo pipefail
-          gh api "gists/$GIST" > gist.json
+          curl -sSf "$API" > gist.json
           new=$(jq -r '.history[0].version' gist.json)
           old=$(jq -r '.history[1].version' gist.json)
           when=$(jq -r '.history[0].committed_at' gist.json)
-          gh api "gists/$GIST/$old" --jq '.files[].content' > old.md
-          gh api "gists/$GIST/$new" --jq '.files[].content' > new.md
+          curl -sSf "$API/$old" | jq -r '.files[].content' > old.md
+          curl -sSf "$API/$new" | jq -r '.files[].content' > new.md
           diff -U1 old.md new.md | tail -n +3 > changes.diff || true
           # Discord caps a message at 2000 characters.
           body=$(head -c 1500 changes.diff)
