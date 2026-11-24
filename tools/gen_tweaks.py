@@ -87,7 +87,8 @@ GIST = {
                 (MIXED, ["iT", "ATVP", "MAX", "AMZN", "PCOK", "PMTP", "HULU", "STAN"]), (BAD, ["HTSR", "SHO"])],
     "UHD DV": [(GOOD, ["DSNP", "NF", "HMAX"]), (MIXED, ["AMZN", "MAX", "PMTP", "iT", "ATVP"]),
                (BAD, ["PCOK", "MA", "HTSR"])],
-    "HD": [(GOOD, ["DSNP", "MA"]), (MIXED, ["CR", "NF", "MAX", "AMZN"]),
+    # HD: the gist splits Amazon by encode; most AMZN 1080p releases are CBR, which sits after MA in Tier I.
+    "HD": [(GOOD, ["DSNP", "MA", "AMZN"]), (MIXED, ["CR", "NF", "MAX"]),
            (OK, ["HMAX", "MS", "iT", "ATVP", "STAN", "KNPY", "PMTP", "SKST", "PCOK"]),
            (BAD, ["HULU", "HTSR", "TUBI", "CRAV"])],
     "SD": [(GOOD, ["PMTP", "PLAY", "DSNP", "HMAX"]), (MIXED, ["NF", "MAX"]), (BAD, ["STAN", "iT", "AMZN"])],

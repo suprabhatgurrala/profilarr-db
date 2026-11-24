@@ -154,10 +154,10 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier IV (UHD HDR): SHO', 'all', -10000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier I (HD): DSNP', 'all', 70000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier I (HD): MA', 'all', 65000);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier II (HD): CR', 'all', 60000);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier II (HD): NF', 'all', 55000);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier II (HD): MAX', 'all', 50000);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier II (HD): AMZN', 'all', 45000);
+INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier I (HD): AMZN', 'all', 60000);
+INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier II (HD): CR', 'all', 55000);
+INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier II (HD): NF', 'all', 50000);
+INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier II (HD): MAX', 'all', 45000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier III (HD): HMAX', 'all', 40000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier III (HD): MS', 'all', 35000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'Source Tier III (HD): iT', 'all', 30000);
