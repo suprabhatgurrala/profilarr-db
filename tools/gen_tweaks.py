@@ -7,21 +7,23 @@ The generated SQL is committed; this script is the source of truth for it.
 Scoring scale. Quality order decides first; scores rank releases of the same quality. The score still reads
 as overall quality, highest first, so the apps' release lists and the delay bypass can use it:
 
-    BAN            -9999999 never grabbed (minimum score is -1000000)
-    bypass         +1000000 skips the delay profile. Default profile bypasses at 1M, the ma-studio tag profile at 2M:
-                            Top Remux, MA preferred group (movies) and 2160p Tier 1 Group (TV) score 2M; iTunes preferred group
-                            (movies) scores 1M, so MA studios still wait for the MA release (iTunes can be posted first)
-    quality band   100000s  Remux-2160p 400000 > WEB-DL 2160p 300000 > Remux-1080p 200000 > WEB-DL 1080p 100000
-    edition        -50000   Special Edition: theatrical cut is the default
-    HDR present    +50000   WEB-DL: any HDR beats any SDR of the same resolution; a 2160p release still
+    BAN            -99999999 never grabbed (minimum score is -10000000)
+    bypass         +10000000 skips the delay profile. Default profile bypasses at 10M, the ma-studio tag profile at 20M:
+                            Top Remux, MA preferred group (movies) and 2160p Tier 1 Group (TV) score 20M; iTunes preferred group
+                            (movies) scores 10M, so MA studios still wait for the MA release (iTunes can be posted first)
+    quality band   1000000s Remux-2160p 4000000 > WEB-DL 2160p 3000000 > Remux-1080p 2000000 > WEB-DL 1080p 1000000
+    edition        -500000  Special Edition: theatrical cut is the default
+    HDR present    +500000  WEB-DL: any HDR beats any SDR of the same resolution; a 2160p release still
                             beats any 1080p one (the 1080p HDR case is mostly Netflix animation)
-    source tier    10000s   source list: SDR or HDR list, DV+HDR10 counts as HDR (good +20000, mixed +10000, OK 0,
-                            bad -10000, BCORE +40000); the UHD DV list only ranks Profile 5 in the DV profile
-    HDR type       +1000s   DV+HDR10 +2000 > HDR10+ +1000 > HDR10 0, within a tier
+    source tier    100000s  source list: SDR or HDR list, DV+HDR10 counts as HDR (good +200000, mixed +100000, OK 0,
+                            bad -100000, BCORE +400000); the UHD DV list only ranks Profile 5 in the DV profile
+    source order   <= 45000 position within a tier, 5000 a step: beats HDR type, IMAX and every tiebreaker, and
+                            a better source in the same tier triggers an upgrade
+    HDR type       +1000s   DV+HDR10 +2000 > HDR10+ +1000 > HDR10 0, within the same source; triggers an upgrade
+                            (the base HDR10 layer itself is "HDR present")
     IMAX           +1000    triggers an upgrade (upgrade increment is 1000)
     repack         5-7      propers_repacks=doNotPrefer: the apps ignore repacks, so score alone ranks releases; a repack only
                             wins a tie (below preferred groups, never an upgrade). Repacks are grabbed by external logic (autobrr)
-    source order   <= 900   position within a tier, 100 a step; always beats a group bonus
     tiebreakers    < 100    season pack 50, preferred (remux) group 10-40, repack 5-7, labels 4, group tier 1-3;
                             these only choose the first grab, never trigger an upgrade
     remux groups   +1000s   Remux Tier 01 3000 > 02 2000 > 03 1000
@@ -31,8 +33,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "tweaks"
 
-BAN = -9999999
-MIN_SCORE = -1000000
+BAN = -99999999
+MIN_SCORE = -10000000
 INCREMENT = 1000
 
 # ---------------------------------------------------------------------------
@@ -73,11 +75,11 @@ SERVICES = {
 }
 
 # vevv's WEB source cheatsheet (gist 1d7037bb556c17e977b26b9f8f175853), best first within a tier.
-# Tier scores: the gist's "good" tier +2000, "mixed" +1000, "OK"/unlisted 0, "bad" -1000.
-GOOD, MIXED, OK, BAD = 20000, 10000, 0, -10000
+# Tier scores: the gist's "good" tier +200000, "mixed" +100000, "OK"/unlisted 0, "bad" -100000.
+GOOD, MIXED, OK, BAD = 200000, 100000, 0, -100000
 # Sony Pictures Core (BCORE): remux-like bitrates, so it beats every other WEB-DL and always triggers an upgrade.
 # A 2160p remux still replaces it; to keep a BCORE file, unmonitor the title in Radarr/Sonarr.
-NEAR_REMUX = 40000
+NEAR_REMUX = 400000
 GIST = {
     "UHD SDR": [(NEAR_REMUX, ["BCORE"]), (GOOD, ["MA", "MS", "PLAY"]), (MIXED, ["NF", "AMZN", "iT", "ATVP", "PCOK", "STAN"]),
                 (OK, ["HULU"]), (BAD, ["HTSR", "PMTP", "SHO"])],
@@ -85,14 +87,16 @@ GIST = {
                 (MIXED, ["iT", "ATVP", "MAX", "AMZN", "PCOK", "PMTP", "HULU", "STAN"]), (BAD, ["HTSR", "SHO"])],
     "UHD DV": [(GOOD, ["DSNP", "NF", "HMAX"]), (MIXED, ["AMZN", "MAX", "PMTP", "iT", "ATVP"]),
                (BAD, ["PCOK", "MA", "HTSR"])],
-    "HD": [(GOOD, ["DSNP", "MA", "CR"]), (MIXED, ["NF", "MAX", "AMZN"]),
+    "HD": [(GOOD, ["DSNP", "MA"]), (MIXED, ["CR", "NF", "MAX", "AMZN"]),
            (OK, ["HMAX", "MS", "iT", "ATVP", "STAN", "KNPY", "PMTP", "SKST", "PCOK"]),
            (BAD, ["HULU", "HTSR", "TUBI", "CRAV"])],
     "SD": [(GOOD, ["PMTP", "PLAY", "DSNP", "HMAX"]), (MIXED, ["NF", "MAX"]), (BAD, ["STAN", "iT", "AMZN"])],
 }
-# Source position (100 a step) outranks every group bonus (preferred group <= 40 + WEB tier <= 3 + anime tier <= 3 < 100),
-# so the better source wins whatever the group; 9 steps cover the longest list, and 900 stays under the upgrade increment.
-POSITION_STEP, POSITION_MAX = 100, 900
+# Source position (5000 a step) outranks HDR type, IMAX and every tiebreaker (2000 + 1000 + < 100 < 5000), so the better
+# source wins whatever the HDR metadata or group, and a better source in the same tier is an upgrade (user's call,
+# 2026-11-24: source first, then HDR type, which still upgrades). 9 steps cover the longest list; 45000 plus HDR type
+# stays under one tier (100000).
+POSITION_STEP, POSITION_MAX = 5000, 45000
 UPSTREAM_NAMING = {"Hulu", "ITVX"}
 
 
@@ -141,7 +145,7 @@ BANS_COMMON = ["BR-DISK", "BR-DISK (BTN)", "3D", "Upscaled", "Generated Dynamic 
                "Language: Not Original"]
 
 LADDER_SCORES = {
-    "Special Edition": -50000,
+    "Special Edition": -500000,
     "Repack/Proper": 5, "Repack2": 6, "Repack3": 7,  # tiebreaker under every preferred group (10+); doNotPrefer (2026-11-24) because preferAndUpgrade ranks revision ahead of score
     "IMAX": 1000,  # also matches IMAX Enhanced (see custom_formats), which is not scored separately
     "Season Pack": 50,
@@ -152,9 +156,9 @@ LADDER_SCORES = {
     "Remux Tier 01": 3000, "Remux Tier 02": 2000, "Remux Tier 03": 1000,
     "Anime BD Tier 01": 3000, "Anime BD Tier 02": 3000, "Anime BD Tier 03": 2000, "Anime BD Tier 04": 2000,
     "Anime BD Tier 05": 1000, "Anime BD Tier 06": 1000, "Anime BD Tier 07": 1000, "Anime BD Tier 08": 1000,
-    "HDR (WEB)": 50000, "HDR: DV+HDR10": 2000, "HDR: HDR10+": 1000,
-    "DVD Remux": 60000, "SD WEB-DL": 30000,
-    "Band: Remux-2160p": 400000, "Band: WEB-DL 2160p": 300000, "Band: Remux-1080p": 200000, "Band: WEB-DL 1080p": 100000,
+    "HDR (WEB)": 500000, "HDR: DV+HDR10": 2000, "HDR: HDR10+": 1000,
+    "DVD Remux": 600000, "SD WEB-DL": 300000,
+    "Band: Remux-2160p": 4000000, "Band: WEB-DL 2160p": 3000000, "Band: Remux-1080p": 2000000, "Band: WEB-DL 1080p": 1000000,
 }
 # Preferred groups, best first: (group, upstream release-group regex, score). Same-source WEB-DLs from these groups
 # are usually the same stream, so this only picks a consistent group across seasons. Never outranks gist position, HDR
@@ -174,8 +178,8 @@ DEMOTED = {"126811": "all", "SiCFoI": "all", "Flights": "all", "AREY": "all"}
 
 # Two bypass levels. The default delay profile bypasses at BYPASS; the ma-studio tag profile (set in Radarr by hand,
 # Profilarr only syncs the default profile) at BYPASS_MA, so an iTunes release still waits for the MA release there.
-BYPASS = 1000000
-BYPASS_MA = 2000000
+BYPASS = 10000000
+BYPASS_MA = 20000000
 BYPASS_SCORES = {"Top Remux": BYPASS_MA, "Tier 1 Group": BYPASS_MA, "MA Preferred Group 2160p HDR": BYPASS_MA,
                  "iTunes Preferred Group 2160p HDR": BYPASS}
 MOVIE_DELAY, TV_DELAY = 48 * 60, 60  # minutes
@@ -618,8 +622,8 @@ def profiles() -> SQL:
         s, "Best Available",
         "One ladder for movies and TV: 2160p Remux (final) > 2160p WEB-DL > 1080p Remux > 1080p WEB-DL. "
         "720p and SD are never grabbed automatically; grab them by hand from Interactive Search. A WEB-DL must name a known streaming service. WEB-DLs rank by "
-        "vevv's source gist for their own HDR type, then HDR type, then group. Remuxes need lossless audio and "
-        "rank by TRaSH tier, then preferred group (CiNEPHiLES). Scores read as overall quality (bands of 100000 per rung); 1000000+ skips the delay.",
+        "vevv's source gist for their own HDR type (a better source is an upgrade), then HDR type, then group. Remuxes need lossless audio and "
+        "rank by TRaSH tier, then preferred group (CiNEPHiLES). Scores read as overall quality (bands of 1000000 per rung); 10000000+ skips the delay.",
         # 1080p WEB-DL is the lowest automatic grab. The 720p/SD scores (SD WEB-DL, DVD Remux, gist SD list)
         # stay defined for manual grabs and in case these rungs come back.
         ["Remux-2160p", "WEBDL-2160p", "Remux-1080p", "WEBDL-1080p"],
@@ -627,8 +631,8 @@ def profiles() -> SQL:
         bans=BANS_COMMON + ["DV (w/o HDR fallback)", "No Streaming Service"])
 
     p5 = {k: v for k, v in LADDER_SCORES.items() if k.startswith(("Repack", "WEB Tier", "Anime Web", "Season Pack", "Preferred Group"))}
-    p5["DV (w/o HDR fallback)"] = 500000
-    # Profile 5 alone tops out near 520000, under BYPASS: a 2160p Tier 1 Group release skips the delay here too.
+    p5["DV (w/o HDR fallback)"] = 5000000
+    # Profile 5 alone tops out near 5245000, under BYPASS: a 2160p Tier 1 Group release skips the delay here too.
     p5["Tier 1 Group"] = BYPASS_MA
     for tier_score, tags in GIST["UHD DV"]:
         for i, tag in enumerate(tags):
@@ -637,7 +641,7 @@ def profiles() -> SQL:
         s, "DV Profile 5",
         "Profile 5 Dolby Vision WEB-DLs only, for the DV libraries (RadarrDV, SonarrDV): 2160p > 1080p, "
         "both ranked by the gist's UHD DV tiers.",
-        ["WEBDL-2160p", "WEBDL-1080p"], top="WEBDL-2160p", min_score=400000, until_score=9999999, scores=naming | p5,
+        ["WEBDL-2160p", "WEBDL-1080p"], top="WEBDL-2160p", min_score=4000000, until_score=99999999, scores=naming | p5,
         bans=BANS_COMMON)
 
     # 3D library (Radarr 3D): frame-packed 3D only, for a 3D-capable player; Plex can't play it. A 2160p
