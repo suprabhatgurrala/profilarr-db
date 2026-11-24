@@ -18,8 +18,8 @@ as overall quality, highest first, so the apps' release lists and the delay bypa
     HDR type       +100s    DV+HDR10 +200 > HDR10+ +100 > HDR10 0, within a tier
     IMAX           +100     triggers an upgrade (upgrade increment is 100)
     repack         0        Sonarr/Radarr's native preferAndUpgrade upgrades same-group repacks only
-    tiebreakers    < 100    season pack 50, preferred (remux) group 10-40, gist position <= 30, labels 4,
-                            group tier 1-3;
+    tiebreakers    < 100    season pack 50, gist position <= 90 (10 a step), preferred remux group 40,
+                            preferred group 1-4, labels 4, group tier 1-3 (group bonuses < one position step);
                             these only choose the first grab, never trigger an upgrade
     remux groups   +100s    Remux Tier 01 300 > 02 200 > 03 100
 """
@@ -87,7 +87,9 @@ GIST = {
            (BAD, ["HULU", "HTSR", "TUBI", "CRAV"])],
     "SD": [(GOOD, ["PMTP", "PLAY", "DSNP", "HMAX"]), (MIXED, ["NF", "MAX"]), (BAD, ["STAN", "iT", "AMZN"])],
 }
-POSITION_STEP, POSITION_MAX = 5, 30
+# Source position outranks every group bonus (preferred group 1-4 + WEB tier 1-3 + anime tier 1-3 < 10), so the
+# better source wins whatever the group; 8 steps cover the longest list, and 90 stays under the upgrade increment.
+POSITION_STEP, POSITION_MAX = 10, 90
 UPSTREAM_NAMING = {"Hulu", "ITVX"}
 
 
@@ -141,10 +143,10 @@ LADDER_SCORES = {
     "Band: Remux-2160p": 40000, "Band: WEB-DL 2160p": 30000, "Band: Remux-1080p": 20000, "Band: WEB-DL 1080p": 10000,
 }
 # Preferred groups, best first: (group, upstream release-group regex, score). Same-source WEB-DLs from these groups
-# are usually the same stream, so this only picks a consistent group across seasons. It outranks gist position and
-# group tiers, never HDR type or a better source. Kept small enough that a season pack (+50) from the top group
-# beats an existing unknown-group file by under the upgrade increment (50 + 40 + 3 < 100), so it never re-grabs.
-PREFERRED_GROUPS = [("FLUX", "FLUX", 40), ("Kitsune", "Kitsune (2)", 30), ("HONE", "HONE", 20), ("NTb", "NTb", 10)]
+# are usually the same stream, so this only picks a consistent group across seasons. Never outranks gist position, HDR
+# type or a better source (preferred group 1-4 now sits alongside the 1-3 group tiers). Kept small enough that a season pack (+50) from the top group
+# beats an existing unknown-group file by under the upgrade increment (50 + 4 + 3 < 100), so it never re-grabs.
+PREFERRED_GROUPS = [("FLUX", "FLUX", 4), ("Kitsune", "Kitsune (2)", 3), ("HONE", "HONE", 2), ("NTb", "NTb", 1)]
 # Same for remuxes: a tiebreaker within a remux tier (CiNEPHiLES is also in Remux Tier 01), never an upgrade.
 PREFERRED_REMUX_GROUPS = [("CiNEPHiLES", "sg-cinephiles", 40)]
 PREFERRED = {"Preferred Group": PREFERRED_GROUPS, "Preferred Remux Group": PREFERRED_REMUX_GROUPS}
