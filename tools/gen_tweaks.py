@@ -11,7 +11,7 @@ as overall quality, highest first, so the apps' release lists and the delay bypa
     bypass         +10000000 skips the delay profile. Default profile bypasses at 10M, the ma-studio tag profile at 20M:
                             Top Remux, MA preferred group (movies) and 2160p Tier 1 Group (TV) score 20M; iTunes preferred group
                             (movies) scores 10M, so MA studios still wait for the MA release (iTunes can be posted first).
-                            DV Profile 5 instead scores Tier 1 Group 4.1M on top of DV 6M (minimum 5M): see profiles()
+                            DV Profile 5 instead scores Tier 1 Group 4M on top of DV 6M (minimum 5M): see profiles()
     quality band   1000000s Remux-2160p 4000000 > WEB-DL 2160p 3000000 > Remux-1080p 2000000 > WEB-DL 1080p 1000000
     edition        -500000  Special Edition: theatrical cut is the default
     HDR present    +500000  WEB-DL: any HDR beats any SDR of the same resolution; a 2160p release still
@@ -19,7 +19,8 @@ as overall quality, highest first, so the apps' release lists and the delay bypa
     source rank    5000s    order on the gist's SDR or HDR list (DV+HDR10 counts as HDR), 5000 a step; tiers only name
                             the formats. 0 is the last entry above the bad tier (and any unlisted service), bad entries are
                             negative. Beats HDR type, IMAX and every tiebreaker, and a better source triggers an upgrade.
-                            The UHD DV list only ranks Profile 5 in the DV profile
+                            The UHD DV list only ranks Profile 5 in the DV profile,
+                            where its bad (negative) sources are banned
     HDR type       +1000s   DV+HDR10 +2000 > HDR10+ +1000 > HDR10 0, within the same source; triggers an upgrade
                             (the base HDR10 layer itself is "HDR present")
     IMAX           +1000    triggers an upgrade (upgrade increment is 1000)
@@ -630,20 +631,22 @@ def profiles() -> SQL:
         bans=BANS_COMMON + ["DV (w/o HDR fallback)", "No Streaming Service"])
 
     p5 = {k: v for k, v in LADDER_SCORES.items() if k.startswith(("Repack", "WEB Tier", "Anime Web", "Season Pack", "Preferred Group"))}
+    # A bad source (negative on the UHD DV list) is never grabbed here, whatever the group: banned, since Tier 1
+    # Group's bonus would lift a merely negative score back over the minimum.
     for tag, sc in source_scores("UHD DV").items():
-        p5[source_cf("UHD DV", tag)] = sc
+        p5[source_cf("UHD DV", tag)] = sc if sc >= 0 else BAN
     # One score answers two questions here: the minimum score requires Profile 5 DV, and BYPASS lets a 2160p Tier 1
     # Group release skip the delay. So the DV format must outweigh every other score put together, and Tier 1 Group
     # only reaches BYPASS on top of it. (Tier 1 Group at BYPASS_MA once passed the minimum without DV.)
-    p5_dv, p5_min, p5_tier1 = 6000000, 5000000, 4100000
+    p5_dv, p5_min = 6000000, 5000000
+    p5_tier1 = BYPASS - p5_dv
     p5["DV (w/o HDR fallback)"] = p5_dv
     p5["Tier 1 Group"] = p5_tier1
     rest = [sc for cf, sc in p5.items() if cf not in ("DV (w/o HDR fallback)", "Tier 1 Group")]
-    most, least = sum(sc for sc in rest if sc > 0), sum(sc for sc in rest if sc < 0)
+    most = sum(sc for sc in rest if sc > 0)
+    assert all(sc >= 0 or sc == BAN for sc in rest), "DV Profile 5: a negative score that isn't a ban can still be grabbed"
     assert p5_tier1 + most < p5_min, "DV Profile 5: a release without Profile 5 DV can reach the minimum score"
-    assert p5_dv + least >= p5_min, "DV Profile 5: a Profile 5 DV release can fall under the minimum score"
     assert p5_dv + most < BYPASS, "DV Profile 5: a DV release outside Tier 1 Group skips the delay"
-    assert p5_dv + p5_tier1 + least >= BYPASS, "DV Profile 5: a DV Tier 1 Group release waits for the delay"
     ladder_profile(
         s, "DV Profile 5",
         "Profile 5 Dolby Vision WEB-DLs only, for the DV libraries (RadarrDV, SonarrDV): 2160p > 1080p, "
