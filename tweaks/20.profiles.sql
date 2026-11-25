@@ -198,7 +198,7 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'DV (w/o HDR fallback)', 'all', -99999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('Best Available', 'No Streaming Service', 'all', -99999999);
 UPDATE quality_profile_custom_formats SET arr_type = (SELECT min(c.arr_type) FROM custom_format_conditions c WHERE c.custom_format_name = quality_profile_custom_formats.custom_format_name) WHERE quality_profile_name = 'Best Available' AND custom_format_name IN (SELECT custom_format_name FROM custom_format_conditions GROUP BY custom_format_name HAVING count(DISTINCT arr_type) = 1 AND min(arr_type) IN ('radarr', 'sonarr'));
-INSERT INTO quality_profiles (name, description, upgrades_allowed, minimum_custom_format_score, upgrade_until_score, upgrade_score_increment) VALUES ('DV Profile 5', 'Profile 5 Dolby Vision WEB-DLs only, for the DV libraries (RadarrDV, SonarrDV): 2160p > 1080p, both ranked by the gist''s UHD DV tiers.', 1, 4000000, 99999999, 1000);
+INSERT INTO quality_profiles (name, description, upgrades_allowed, minimum_custom_format_score, upgrade_until_score, upgrade_score_increment) VALUES ('DV Profile 5', 'Profile 5 Dolby Vision WEB-DLs only, for the DV libraries (RadarrDV, SonarrDV): 2160p > 1080p, both ranked by the gist''s UHD DV tiers.', 1, 5000000, 99999999, 1000);
 INSERT INTO quality_profile_qualities (quality_profile_name, quality_name, position, enabled, upgrade_until) VALUES ('DV Profile 5', 'WEBDL-2160p', 0, 1, 1);
 INSERT INTO quality_profile_qualities (quality_profile_name, quality_name, position, enabled, upgrade_until) VALUES ('DV Profile 5', 'WEBDL-1080p', 1, 1, 0);
 INSERT INTO quality_profile_qualities (quality_profile_name, quality_name, position, enabled, upgrade_until) VALUES ('DV Profile 5', 'Remux-2160p', 2, 0, 0);
@@ -288,8 +288,6 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Preferred Group: Kitsune', 'all', 30);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Preferred Group: HONE', 'all', 20);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Preferred Group: NTb', 'all', 10);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'DV (w/o HDR fallback)', 'all', 5000000);
-INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Tier 1 Group', 'all', 20000000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Source Tier I (P5): DSNP', 'all', 35000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Source Tier I (P5): NF', 'all', 30000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Source Tier I (P5): HMAX', 'all', 25000);
@@ -301,6 +299,8 @@ INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Source Tier IV (P5): PCOK', 'all', -5000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Source Tier IV (P5): MA', 'all', -10000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Source Tier IV (P5): HTSR', 'all', -15000);
+INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'DV (w/o HDR fallback)', 'all', 6000000);
+INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'Tier 1 Group', 'all', 4100000);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'BR-DISK', 'all', -99999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', 'BR-DISK (BTN)', 'all', -99999999);
 INSERT INTO quality_profile_custom_formats (quality_profile_name, custom_format_name, arr_type, score) VALUES ('DV Profile 5', '3D', 'all', -99999999);
