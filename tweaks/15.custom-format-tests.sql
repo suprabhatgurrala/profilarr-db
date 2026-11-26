@@ -55,6 +55,8 @@ INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, 
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Netflix', 'Some Show (2020) - S01E01 - Pilot - Netflix 2160p WEB-DL DV HDR10 EAC3 Atmos 5.1-GRP', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Max', 'Mad Max (1979) {imdb-tt0079501} 1080p Blu-ray Remux DTS-HD MA 2.0', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Apple TV+', 'Some.Show.S01E01.2160p.ATVP.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-GRP', 'series', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Apple TV+', 'South.Park.S27E01.2160p.ATV.WEB-DL.DDP5.1.H.265-GRP', 'series', 1, NULL);
+INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Apple TV+', 'Quad.ATV.Racing.2010.1080p.BluRay.DTS.H.264-GRP', 'movie', 0, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Paramount+', 'Some.Show.S01E01.1080p.PMTP.WEB-DL.DDP5.1.H.264-GRP', 'series', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Sony Pictures Core', 'Some.Film.2010.2160p.BCORE.WEB-DL.DTS-HD.MA.5.1.HDR.H.265-GRP', 'movie', 1, NULL);
 INSERT INTO custom_format_tests (custom_format_name, title, type, should_match, description) VALUES ('Sony Pictures Core', 'Call Me by Your Name (2017) {imdb-tt5726616} 4K HDR10 Sony Pictures Core WEB-DL DTS-HD MA', 'movie', 1, NULL);
