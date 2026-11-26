@@ -142,8 +142,9 @@ AUDIO = [("TrueHD Atmos", "TrueHD ATMOS"), ("TrueHD", None), ("DTS-X", "DTS X"),
 # too: it is mostly older discs that only ever had lossy audio (same day).
 BANS_COMMON = ["BR-DISK", "BR-DISK (BTN)", "3D", "Upscaled", "Generated Dynamic HDR",
                "Line/Mic Dubbed", "AV1", "Sing-Along Versions", "Black and White Editions",
-               "Extras", "x265 (no HDR/DV)", "Retags", "Obfuscated", "Open Matte",
-               "Language: Not Original"]
+               "Extras", "x265 (no HDR/DV)", "Retags", "Obfuscated", "Open Matte"]
+# "Language: Not Original" is not banned (user, 2026-11-25): releases in a non-original language are rare, handled by hand,
+# and the ban misfired on films whose TMDB original language differs from the spoken one (Fjord).
 
 LADDER_SCORES = {
     "Special Edition": -500000,
