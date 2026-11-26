@@ -15,7 +15,7 @@ INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-PLA
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-NF', '\b(nf|netflix)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Netflix followed by a WEB source');
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-AMZN', '\b(amzn|amazon)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Amazon followed by a WEB source');
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-iT', '\b(it|itunes)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'iTunes followed by a WEB source');
-INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-ATVP', '\b((atvp|aptv|apple[ ._-]tv(\+|plus)?)(?=[ ._-])|atv(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b))(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Apple TV+ followed by a WEB source');
+INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-ATVP', '\b((atvp|aptv|apple[ ._-]tv(\+|plus)?)(?=[ ._-])|atv(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b))(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Apple TV followed by a WEB source');
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-PCOK', '\b(pcok|peacock)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Peacock followed by a WEB source');
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-STAN', '\b(stan)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Stan followed by a WEB source');
 INSERT INTO regular_expressions (name, pattern, description) VALUES ('sg-svc-HULU', '\b(hulu)\b(?=[ ._-]+((480|576|720|1080|2160)p[ ._-]+)?web[ ._-]?(dl|rip)?\b)', 'Hulu followed by a WEB source');
@@ -78,13 +78,13 @@ INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, 
 INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('iTunes', 'WEBDL', 'web_dl');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('iTunes', 'WEBRIP', 'source', 'all', 0, 0);
 INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('iTunes', 'WEBRIP', 'webrip');
-INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Apple TV+', 'Naming only (score 0): prints ''Apple TV+'' for ATVP releases.', 1);
-INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Apple TV+', 'Apple TV+', 'release_title', 'all', 0, 1);
-INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Apple TV+', 'Apple TV+', 'sg-svc-ATVP');
-INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Apple TV+', 'WEBDL', 'source', 'all', 0, 0);
-INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('Apple TV+', 'WEBDL', 'web_dl');
-INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Apple TV+', 'WEBRIP', 'source', 'all', 0, 0);
-INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('Apple TV+', 'WEBRIP', 'webrip');
+INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Apple TV', 'Naming only (score 0): prints ''Apple TV'' for ATVP releases.', 1);
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Apple TV', 'Apple TV', 'release_title', 'all', 0, 1);
+INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Apple TV', 'Apple TV', 'sg-svc-ATVP');
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Apple TV', 'WEBDL', 'source', 'all', 0, 0);
+INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('Apple TV', 'WEBDL', 'web_dl');
+INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Apple TV', 'WEBRIP', 'source', 'all', 0, 0);
+INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('Apple TV', 'WEBRIP', 'webrip');
 INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Peacock', 'Naming only (score 0): prints ''Peacock'' for PCOK releases.', 1);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Peacock', 'Peacock', 'release_title', 'all', 0, 1);
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Peacock', 'Peacock', 'sg-svc-PCOK');
@@ -319,7 +319,7 @@ INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, 
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Source Tier II (UHD SDR): iT', 'Not HDR', 'sg-hdr-present');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Source Tier II (UHD SDR): iT', 'Not DV', 'release_title', 'all', 1, 1);
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Source Tier II (UHD SDR): iT', 'Not DV', 'sg-dv');
-INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Source Tier II (UHD SDR): ATVP', 'Apple TV+ on the UHD SDR source list (vevv''s WEB source gist).', 0);
+INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Source Tier II (UHD SDR): ATVP', 'Apple TV on the UHD SDR source list (vevv''s WEB source gist).', 0);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Source Tier II (UHD SDR): ATVP', 'Service', 'release_title', 'all', 0, 1);
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Source Tier II (UHD SDR): ATVP', 'Service', 'sg-svc-ATVP');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Source Tier II (UHD SDR): ATVP', 'WEBDL', 'source', 'all', 0, 1);
@@ -459,7 +459,7 @@ INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, 
 INSERT INTO condition_resolutions (custom_format_name, condition_name, resolution) VALUES ('Source Tier II (UHD HDR): iT', '2160p', '2160p');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Source Tier II (UHD HDR): iT', 'HDR', 'release_title', 'all', 0, 1);
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Source Tier II (UHD HDR): iT', 'HDR', 'sg-hdr-present');
-INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Source Tier II (UHD HDR): ATVP', 'Apple TV+ on the UHD HDR source list (vevv''s WEB source gist).', 0);
+INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Source Tier II (UHD HDR): ATVP', 'Apple TV on the UHD HDR source list (vevv''s WEB source gist).', 0);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Source Tier II (UHD HDR): ATVP', 'Service', 'release_title', 'all', 0, 1);
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Source Tier II (UHD HDR): ATVP', 'Service', 'sg-svc-ATVP');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Source Tier II (UHD HDR): ATVP', 'WEBDL', 'source', 'all', 0, 1);
@@ -621,7 +621,7 @@ INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, 
 INSERT INTO condition_resolutions (custom_format_name, condition_name, resolution) VALUES ('Source Tier III (HD): iT', '1080p', '1080p');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Source Tier III (HD): iT', '720p', 'resolution', 'all', 0, 0);
 INSERT INTO condition_resolutions (custom_format_name, condition_name, resolution) VALUES ('Source Tier III (HD): iT', '720p', '720p');
-INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Source Tier III (HD): ATVP', 'Apple TV+ on the HD source list (vevv''s WEB source gist).', 0);
+INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Source Tier III (HD): ATVP', 'Apple TV on the HD source list (vevv''s WEB source gist).', 0);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Source Tier III (HD): ATVP', 'Service', 'release_title', 'all', 0, 1);
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Source Tier III (HD): ATVP', 'Service', 'sg-svc-ATVP');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Source Tier III (HD): ATVP', 'WEBDL', 'source', 'all', 0, 1);
@@ -873,7 +873,7 @@ INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, 
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Source Tier II (P5): iT', 'Not HDR', 'sg-hdr-present');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Source Tier II (P5): iT', 'WEBDL', 'source', 'all', 0, 1);
 INSERT INTO condition_sources (custom_format_name, condition_name, source) VALUES ('Source Tier II (P5): iT', 'WEBDL', 'web_dl');
-INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Source Tier II (P5): ATVP', 'Apple TV+ Profile 5 DV, ranked by the UHD DV source list (vevv''s WEB source gist).', 0);
+INSERT INTO custom_formats (name, description, include_in_rename) VALUES ('Source Tier II (P5): ATVP', 'Apple TV Profile 5 DV, ranked by the UHD DV source list (vevv''s WEB source gist).', 0);
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Source Tier II (P5): ATVP', 'Service', 'release_title', 'all', 0, 1);
 INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expression_name) VALUES ('Source Tier II (P5): ATVP', 'Service', 'sg-svc-ATVP');
 INSERT INTO custom_format_conditions (custom_format_name, name, type, arr_type, negate, required) VALUES ('Source Tier II (P5): ATVP', 'DV', 'release_title', 'all', 0, 1);
@@ -1123,4 +1123,4 @@ INSERT INTO condition_patterns (custom_format_name, condition_name, regular_expr
 UPDATE regular_expressions SET pattern = '(?<=\b[12]\d{3}\b).*(\b|_)(?<!Blu-ray )(3d|[fh]?sbs|half[ ._-]ou)(\b|_)' WHERE name = '3D' AND pattern = '(?<=\b[12]\d{3}\b).*(\b|_)(3d|[fh]?sbs|half[ ._-]ou)(\b|_)';
 DELETE FROM custom_format_conditions WHERE custom_format_name = 'IMAX' AND name = 'NOT: IMAX Enhanced';
 UPDATE custom_formats SET include_in_rename = 0;
-UPDATE custom_formats SET include_in_rename = 1 WHERE name IN ('Movies Anywhere', 'Microsoft Store', 'Google Play', 'Netflix', 'Amazon', 'iTunes', 'Apple TV+', 'Peacock', 'Stan', 'Hulu', 'Hotstar', 'ZEE5', 'Paramount+', 'Showtime', 'Disney+', 'HBO Max', 'Max', 'Sony Pictures Core', 'Crunchyroll', 'Kanopy', 'SkyShowtime', 'Tubi', 'Crave', 'BBC iPlayer', 'All 4', 'Roku', 'ITVX', 'IMAX', 'TrueHD Atmos', 'TrueHD', 'DTS-X', 'DTS-HD MA', 'LPCM', 'FLAC', 'DD+ Atmos', 'DD+', 'DD', 'DTS', 'AAC', 'Opus');
+UPDATE custom_formats SET include_in_rename = 1 WHERE name IN ('Movies Anywhere', 'Microsoft Store', 'Google Play', 'Netflix', 'Amazon', 'iTunes', 'Apple TV', 'Peacock', 'Stan', 'Hulu', 'Hotstar', 'ZEE5', 'Paramount+', 'Showtime', 'Disney+', 'HBO Max', 'Max', 'Sony Pictures Core', 'Crunchyroll', 'Kanopy', 'SkyShowtime', 'Tubi', 'Crave', 'BBC iPlayer', 'All 4', 'Roku', 'ITVX', 'IMAX', 'TrueHD Atmos', 'TrueHD', 'DTS-X', 'DTS-HD MA', 'LPCM', 'FLAC', 'DD+ Atmos', 'DD+', 'DD', 'DTS', 'AAC', 'Opus');
