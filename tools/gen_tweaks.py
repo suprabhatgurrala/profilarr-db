@@ -16,17 +16,19 @@ as overall quality, highest first, so the apps' release lists and the delay bypa
     edition        -500000  Special Edition: theatrical cut is the default
     HDR present    +500000  WEB-DL: any HDR beats any SDR of the same resolution; a 2160p release still
                             beats any 1080p one (the 1080p HDR case is mostly Netflix animation)
-    source rank    5000s    order on the gist's SDR or HDR list (DV+HDR10 counts as HDR), 5000 a step; tiers only name
+    source rank    10000s   order on the gist's SDR or HDR list (DV+HDR10 counts as HDR), 10000 a step; tiers only name
                             the formats. 0 is the last entry above the bad tier (and any unlisted service), bad entries are
-                            negative. Beats HDR type, IMAX and every tiebreaker, and a better source triggers an upgrade.
+                            negative. Beats HDR type, IMAX, audio and every tiebreaker, and a better source triggers an upgrade.
                             The UHD DV list only ranks Profile 5 in the DV profile,
                             where its bad (negative) sources are banned
-    HDR type       +1000s   DV+HDR10 +2000 > HDR10+ +1000 > HDR10 0, within the same source; triggers an upgrade
+    HDR type       +2000s   DV+HDR10 +4000 > HDR10+ +2000 > HDR10 0, within the same source; triggers an upgrade
                             (the base HDR10 layer itself is "HDR present")
-    IMAX           +1000    triggers an upgrade (upgrade increment is 1000)
+    IMAX           +1000    triggers an upgrade (upgrade increment is 150)
+    audio          150s     TrueHD Atmos = DTS:X 750 > DD+ Atmos 600 > other lossless 450 > DD+ 300 > DD = DTS 150 > AAC/Opus 0,
+                            below IMAX (user, 2026-11-27); a step is one upgrade increment, so better audio triggers an upgrade
     repack         5-7      propers_repacks=doNotPrefer: the apps ignore repacks, so score alone ranks releases; a repack only
                             wins a tie (below preferred groups, never an upgrade). Repacks are grabbed by external logic (autobrr)
-    tiebreakers    < 100    season pack 50, preferred (remux) group 10-40, repack 5-7, labels 4, group tier 1-3;
+    tiebreakers    < 150    season pack 50, preferred (remux) group 10-40, repack 5-7, labels 4, group tier 1-3 (104 at most);
                             these only choose the first grab, never trigger an upgrade
     remux groups   +1000s   Remux Tier 01 3000 > 02 2000 > 03 1000
 """
@@ -37,7 +39,7 @@ OUT = ROOT / "tweaks"
 
 BAN = -99999999
 MIN_SCORE = -10000000
-INCREMENT = 1000
+INCREMENT = 150
 
 # ---------------------------------------------------------------------------
 # Streaming services: (tag, spelled-out name used in file names, title regex)
@@ -96,11 +98,11 @@ GIST = {
            (BAD, ["HULU", "HTSR", "TUBI", "CRAV"])],
     "SD": [(GOOD, ["PMTP", "PLAY", "DSNP", "HMAX"]), (MIXED, ["NF", "MAX"]), (BAD, ["STAN", "iT", "AMZN"])],
 }
-# Source rank: 5000 a step down the list, which outranks HDR type, IMAX and every tiebreaker (2000 + 1000 + < 100 < 5000),
+# Source rank: 10000 a step down the list, which outranks HDR type, IMAX, audio and every tiebreaker (4000 + 1000 + 750 + < 150 < 10000),
 # so the better source wins whatever the HDR metadata or group, and a better source is an upgrade (user's call,
 # 2026-11-24: source first, then HDR type, which still upgrades). The last entry above the bad tier scores 0, level with
-# an unlisted service; bad entries go negative. The longest list (HD, 19 entries) spans 90000, under HDR present (500000).
-SOURCE_STEP = 5000
+# an unlisted service; bad entries go negative. The longest list (HD, 19 entries) spans 180000, under HDR present (500000).
+SOURCE_STEP = 10000
 UPSTREAM_NAMING = {"Hulu", "ITVX"}
 
 
@@ -137,6 +139,13 @@ RX = {
 AUDIO = [("TrueHD Atmos", "TrueHD ATMOS"), ("TrueHD", None), ("DTS-X", "DTS X"), ("DTS-HD MA", None),
          ("LPCM", "PCM"), ("FLAC", None), ("DD+ Atmos", "DD+ ATMOS"), ("DD+", None), ("DD", None), ("DTS", None),
          ("AAC", None), ("Opus", None)]
+# Audio rank (user, 2026-11-27): lossless Atmos/DTS:X > DD+ Atmos > other lossless > DD+ > DD/DTS > AAC/Opus.
+# One upgrade increment a step, so better audio is an upgrade; the whole range stays under IMAX (see the scale above).
+AUDIO_STEP = INCREMENT
+AUDIO_RANK = [["TrueHD Atmos", "DTS-X"], ["DD+ Atmos"], ["TrueHD", "DTS-HD MA", "LPCM", "FLAC"], ["DD+"], ["DD", "DTS"],
+              ["AAC", "Opus"]]
+AUDIO_SCORES = {n: AUDIO_STEP * (len(AUDIO_RANK) - 1 - i) for i, names in enumerate(AUDIO_RANK) for n in names}
+assert set(AUDIO_SCORES) == {n for n, _ in AUDIO}, "every printed audio format needs a rank"
 
 # Technical rejections only. TRaSH's group-name bans (LQ, LQ (Release Title), Bad Dual Groups, Anime LQ Groups)
 # score 0: the private trackers already police release quality (user's call, 2026-11-17). Lossy Remux scores 0
@@ -159,14 +168,14 @@ LADDER_SCORES = {
     "Remux Tier 01": 3000, "Remux Tier 02": 2000, "Remux Tier 03": 1000,
     "Anime BD Tier 01": 3000, "Anime BD Tier 02": 3000, "Anime BD Tier 03": 2000, "Anime BD Tier 04": 2000,
     "Anime BD Tier 05": 1000, "Anime BD Tier 06": 1000, "Anime BD Tier 07": 1000, "Anime BD Tier 08": 1000,
-    "HDR (WEB)": 500000, "HDR: DV+HDR10": 2000, "HDR: HDR10+": 1000,
+    "HDR (WEB)": 500000, "HDR: DV+HDR10": 4000, "HDR: HDR10+": 2000,
     "DVD Remux": 600000, "SD WEB-DL": 300000,
     "Band: Remux-2160p": 4000000, "Band: WEB-DL 2160p": 3000000, "Band: Remux-1080p": 2000000, "Band: WEB-DL 1080p": 1000000,
 }
 # Preferred groups, best first: (group, upstream release-group regex, score). Same-source WEB-DLs from these groups
 # are usually the same stream, so this only picks a consistent group across seasons. Never outranks gist position, HDR
 # type or a better source (it does outrank the 1-3 group tiers). Kept small enough that a season pack (+50) from the top group
-# beats an existing unknown-group file by under the upgrade increment (50 + 40 + 3 < 1000), so it never re-grabs.
+# beats an existing unknown-group file by under the upgrade increment (50 + 40 + 3 < 150), so it never re-grabs.
 PREFERRED_GROUPS = [("FLUX", "FLUX", 40), ("Kitsune", "Kitsune (2)", 30), ("HONE", "HONE", 20), ("NTb", "NTb", 10)]
 # Same for remuxes: a tiebreaker within a remux tier (CiNEPHiLES is also in Remux Tier 01), never an upgrade.
 PREFERRED_REMUX_GROUPS = [("CiNEPHiLES", "sg-cinephiles", 40)]
@@ -614,7 +623,15 @@ def ladder_profile(s: SQL, name: str, desc: str, rungs: list, top: str, min_scor
 
 def profiles() -> SQL:
     s = SQL()
-    naming = {spelled: 0 for spelled, _ in SERVICES.values()} | {n: 0 for n, _ in AUDIO} | {"IMAX": 0}
+    naming = {spelled: 0 for spelled, _ in SERVICES.values()} | AUDIO_SCORES | {"IMAX": 0}
+    # Each level of the scale must outweigh everything below it put together (tiebreakers at most 104).
+    tiebreak = 50 + 40 + 7 + 4 + 3
+    assert tiebreak < INCREMENT, "a tiebreaker can trigger an upgrade"
+    assert max(AUDIO_SCORES.values()) + tiebreak < LADDER_SCORES["IMAX"], "audio outranks IMAX"
+    below_hdr = LADDER_SCORES["IMAX"] + max(AUDIO_SCORES.values()) + tiebreak
+    assert LADDER_SCORES["HDR: HDR10+"] > below_hdr and LADDER_SCORES["HDR: DV+HDR10"] - LADDER_SCORES["HDR: HDR10+"] > below_hdr, \
+        "HDR type doesn't outrank IMAX and audio"
+    assert SOURCE_STEP > LADDER_SCORES["HDR: DV+HDR10"] + below_hdr, "source rank doesn't outrank HDR type, IMAX and audio"
 
     scores = dict(LADDER_SCORES) | BYPASS_SCORES
     for lst, tiers in GIST.items():
@@ -626,8 +643,8 @@ def profiles() -> SQL:
         s, "Best Available",
         "One ladder for movies and TV: 2160p Remux (final) > 2160p WEB-DL > 1080p Remux > 1080p WEB-DL. "
         "720p and SD are never grabbed automatically; grab them by hand from Interactive Search. A WEB-DL must name a known streaming service. WEB-DLs rank by "
-        "vevv's source gist for their own HDR type (a better source is an upgrade), then HDR type, then group. Remuxes need lossless audio and "
-        "rank by TRaSH tier, then preferred group (CiNEPHiLES). Scores read as overall quality (bands of 1000000 per rung); 10000000+ skips the delay.",
+        "vevv's source gist for their own HDR type (a better source is an upgrade), then HDR type, then IMAX, then audio, then group. Remuxes need lossless audio and "
+        "rank by TRaSH tier, then IMAX, then audio, then preferred group (CiNEPHiLES). Scores read as overall quality (bands of 1000000 per rung); 10000000+ skips the delay.",
         # 1080p WEB-DL is the lowest automatic grab. The 720p/SD scores (SD WEB-DL, DVD Remux, gist SD list)
         # stay defined for manual grabs and in case these rungs come back.
         ["Remux-2160p", "WEBDL-2160p", "Remux-1080p", "WEBDL-1080p"],
@@ -654,7 +671,7 @@ def profiles() -> SQL:
     ladder_profile(
         s, "DV Profile 5",
         "Profile 5 Dolby Vision WEB-DLs only, for the DV libraries (RadarrDV, SonarrDV): 2160p > 1080p, "
-        "both ranked by the gist's UHD DV tiers.",
+        "both ranked by the gist's UHD DV tiers, then audio.",
         ["WEBDL-2160p", "WEBDL-1080p"], top="WEBDL-2160p", min_score=p5_min, until_score=99999999, scores=naming | p5,
         bans=BANS_COMMON)
 
@@ -670,7 +687,7 @@ def profiles() -> SQL:
         s, "3D",
         "Frame-packed 3D only, for the 3D library (Radarr 3D): 2160p 3D WEB-DL (MV-HEVC, e.g. Disney+; final) "
         "> Blu-ray 3D remux (MVC, 1080p) > 1080p 3D WEB-DL. SBS/OU encodes, 2D releases and ISOs are never grabbed. "
-        "Remuxes need lossless audio and rank by TRaSH tier, then preferred group (CiNEPHiLES).",
+        "Remuxes need lossless audio and rank by TRaSH tier, then audio, then preferred group (CiNEPHiLES).",
         ["WEBDL-2160p", "Remux-1080p", "WEBDL-1080p"], top="WEBDL-2160p", min_score=400000, until_score=9999999,
         scores=naming | three_d,
         # MV-HEVC is always HEVC, so TRaSH's x265 ban would reject every SDR 1080p 3D WEB-DL.
